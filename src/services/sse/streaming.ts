@@ -72,10 +72,18 @@ export class StreamingService {
             const data = line.slice(6);
 
             if (data === '[DONE]') {
-              // Stream complete
+              // Stream complete - create a fake completion message
+              callbacks.onComplete({
+                id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                conversation_id: conversationId,
+                role: 'assistant',
+                content: '',
+                created_at: new Date().toISOString(),
+              });
               continue;
             }
 
+            // Try to parse as JSON first (for structured responses)
             try {
               const parsed = JSON.parse(data);
 
@@ -87,7 +95,14 @@ export class StreamingService {
                 callbacks.onError(new Error(parsed.error));
               }
             } catch (e) {
-              console.error('Failed to parse SSE data:', e);
+              // Not JSON - treat as plain text chunk from server
+              callbacks.onMessage(data);
+            }
+          } else if (line.startsWith('event: error')) {
+            // Error event
+            const errorLine = lines[lines.indexOf(line) + 1];
+            if (errorLine && errorLine.startsWith('data: ')) {
+              callbacks.onError(new Error(errorLine.slice(6)));
             }
           }
         }

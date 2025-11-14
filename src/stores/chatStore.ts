@@ -54,7 +54,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
   createConversation: async (mode: string = 'chat', title?: string) => {
     set({ isLoading: true, error: null });
     try {
+      console.log('Creating conversation with:', { mode, title });
       const conversation = await api.createConversation(mode, title);
+      console.log('Created conversation:', conversation);
 
       // Add to conversations list
       const { conversations } = get();
@@ -65,7 +67,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       return conversation;
     } catch (error: any) {
-      const errorMessage = error.response?.data?.detail || 'Failed to create conversation';
+      console.error('Failed to create conversation:', error);
+      console.error('Error response:', error.response);
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to create conversation';
       set({ error: errorMessage, isLoading: false });
       throw error;
     }
@@ -107,15 +111,22 @@ export const useChatStore = create<ChatState>((set, get) => ({
             }));
           },
           onComplete: (message: Message) => {
-            const { currentConversation } = get();
+            const { currentConversation, streamingContent } = get();
             if (currentConversation) {
+              // Create final assistant message with accumulated content
+              const finalMessage: Message = {
+                ...message,
+                content: streamingContent || message.content,
+                id: message.id || `msg-${Date.now()}`,
+              };
+
               set({
                 currentConversation: {
                   ...currentConversation,
                   messages: [
                     ...currentConversation.messages.filter(m => m.id !== userMessage.id),
                     userMessage,
-                    message,
+                    finalMessage,
                   ],
                 },
                 isStreaming: false,

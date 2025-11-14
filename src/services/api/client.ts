@@ -29,9 +29,11 @@ class ApiClient {
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
+          console.warn('401 Unauthorized - Token expired, logging out...');
           localStorage.removeItem('token');
           localStorage.removeItem('user');
-          window.location.href = '/login';
+          // Force page reload to trigger auth redirect
+          window.location.replace('/login');
         }
         return Promise.reject(error);
       }
@@ -63,7 +65,13 @@ class ApiClient {
 
   // Conversation endpoints
   async createConversation(mode: string = 'chat', title?: string) {
-    const { data } = await this.client.post('/conversations', { mode, title });
+    const payload: any = { mode };
+    if (title) {
+      payload.title = title;
+    }
+    console.log('API: Creating conversation with payload:', payload);
+    const { data } = await this.client.post('/conversations', payload);
+    console.log('API: Received response:', data);
     return data;
   }
 
@@ -97,6 +105,50 @@ class ApiClient {
     // EventSource doesn't support POST or custom headers, so we'll use fetch with SSE
     // Use the StreamingService from services/sse/streaming.ts instead
     throw new Error('Use SSE service for streaming');
+  }
+
+  // Calendar OAuth endpoints
+  async startMicrosoftOAuth() {
+    const { data } = await this.client.post('/calendar/oauth/microsoft/start');
+    return data;
+  }
+
+  async pollMicrosoftOAuth(deviceCode: string) {
+    const { data } = await this.client.post('/calendar/oauth/microsoft/poll', {
+      device_code: deviceCode,
+      set_as_primary: true,
+    });
+    return data;
+  }
+
+  async getConnectedCalendars() {
+    const { data } = await this.client.get('/calendar/oauth/connected');
+    return data;
+  }
+
+  async disconnectCalendar(provider: string) {
+    const { data} = await this.client.delete(`/calendar/oauth/${provider}`);
+    return data;
+  }
+
+  // Calendar event endpoints
+  async createCalendarEvent(event: {
+    title: string;
+    start_time: string;
+    end_time: string;
+    description?: string;
+    location?: string;
+    attendees?: string[];
+  }) {
+    const { data } = await this.client.post('/calendar/events', event);
+    return data;
+  }
+
+  async getCalendarEvents(startDate?: string, endDate?: string) {
+    const { data } = await this.client.get('/calendar/events', {
+      params: { start_date: startDate, end_date: endDate },
+    });
+    return data;
   }
 }
 

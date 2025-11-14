@@ -1,10 +1,12 @@
 import type { FC, FormEvent } from 'react';
 import { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Message } from '../types';
 import { useAuthStore } from '../stores/authStore';
 import { useChatStore } from '../stores/chatStore';
 
 export const Chat: FC = () => {
+  const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const {
     conversations,
@@ -54,8 +56,13 @@ export const Chat: FC = () => {
   };
 
   const handleNewConversation = async () => {
-    const conversation = await createConversation('chat', 'New Conversation');
-    await loadConversation(conversation.id);
+    try {
+      const conversation = await createConversation('chat', 'New Conversation');
+      await loadConversation(conversation.id);
+    } catch (err: any) {
+      // Error is already shown in the UI via the store
+      console.error('handleNewConversation error:', err);
+    }
   };
 
   const handleSelectConversation = async (id: string) => {
@@ -94,12 +101,26 @@ export const Chat: FC = () => {
             <h1 className="text-2xl font-light text-navy tracking-wide">
               CLAUDINE
             </h1>
-            <button
-              onClick={logout}
-              className="text-xs text-text-secondary hover:text-accent transition-colors uppercase tracking-widest"
-            >
-              Logout
-            </button>
+            <div className="flex gap-4">
+              <button
+                onClick={() => navigate('/monitor')}
+                className="text-xs text-text-secondary hover:text-accent transition-colors uppercase tracking-widest"
+              >
+                🔍 Monitor
+              </button>
+              <button
+                onClick={() => navigate('/settings')}
+                className="text-xs text-text-secondary hover:text-accent transition-colors uppercase tracking-widest"
+              >
+                Settings
+              </button>
+              <button
+                onClick={logout}
+                className="text-xs text-text-secondary hover:text-accent transition-colors uppercase tracking-widest"
+              >
+                Logout
+              </button>
+            </div>
           </div>
           <p className="text-sm text-text-secondary">
             {user?.full_name || user?.email}
