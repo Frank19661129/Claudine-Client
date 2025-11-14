@@ -1,7 +1,8 @@
-import { FC, useEffect, useState, FormEvent, useRef } from 'react';
+import type { FC, FormEvent } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import type { Message } from '../types';
 import { useAuthStore } from '../stores/authStore';
 import { useChatStore } from '../stores/chatStore';
-import { Message } from '../types';
 
 export const Chat: FC = () => {
   const { user, logout } = useAuthStore();
@@ -175,7 +176,7 @@ export const Chat: FC = () => {
 
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {allMessages.map((message, index) => (
+              {allMessages.map((message) => (
                 <div
                   key={message.id}
                   className={`flex ${

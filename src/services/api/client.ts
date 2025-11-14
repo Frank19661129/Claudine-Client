@@ -1,5 +1,6 @@
-import axios, { AxiosInstance } from 'axios';
-import { AuthResponse, User } from '../../types';
+import axios from 'axios';
+import type { AxiosInstance } from 'axios';
+import type { AuthResponse, User } from '../../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8003/api/v1';
 
@@ -91,13 +92,10 @@ class ApiClient {
     return data;
   }
 
-  // SSE streaming - returns EventSource
-  createStreamingConnection(conversationId: string, content: string): EventSource {
-    const token = localStorage.getItem('token');
-    const url = `${API_URL}/conversations/${conversationId}/messages/stream`;
-
+  // SSE streaming - deprecated, use StreamingService instead
+  createStreamingConnection(_conversationId: string, _content: string): EventSource {
     // EventSource doesn't support POST or custom headers, so we'll use fetch with SSE
-    // For now, return null and we'll implement proper SSE in a separate service
+    // Use the StreamingService from services/sse/streaming.ts instead
     throw new Error('Use SSE service for streaming');
   }
 }

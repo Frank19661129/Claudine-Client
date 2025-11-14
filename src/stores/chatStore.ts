@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Conversation, ConversationDetail, Message } from '../types';
+import type { Conversation, ConversationDetail, Message } from '../types';
 import { api } from '../services/api/client';
 import { streamingService } from '../services/sse/streaming';
 
