@@ -1,5 +1,5 @@
 import type { FC, FormEvent } from 'react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Message } from '../types';
 import { useAuthStore } from '../stores/authStore';
@@ -25,12 +25,72 @@ export const Chat: FC = () => {
 
   const [messageInput, setMessageInput] = useState('');
   const [showCommandHints, setShowCommandHints] = useState(false);
+  const [location, setLocation] = useState<{city?: string; country?: string} | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const requestLocation = useCallback(() => {
+    setLocationLoading(true);
+    setLocationError(null);
+
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`,
+              {
+                headers: {
+                  'User-Agent': 'ClaudineApp/1.0'
+                }
+              }
+            );
+            const data = await response.json();
+            setLocation({
+              city: data.address?.city || data.address?.town || data.address?.village,
+              country: data.address?.country,
+            });
+            setLocationLoading(false);
+          } catch (err) {
+            console.error('Failed to reverse geocode:', err);
+            setLocation({
+              city: `${position.coords.latitude.toFixed(2)}°, ${position.coords.longitude.toFixed(2)}°`,
+              country: undefined,
+            });
+            setLocationLoading(false);
+          }
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          if (error.code === error.PERMISSION_DENIED) {
+            setLocationError('Location permission denied');
+          } else {
+            setLocationError('Unable to access location');
+          }
+          setLocationLoading(false);
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 0 // Force fresh location
+        }
+      );
+    } else {
+      setLocationError('Geolocation not supported');
+      setLocationLoading(false);
+    }
+  }, []);
 
   // Load conversations on mount
   useEffect(() => {
     loadConversations();
   }, [loadConversations]);
+
+  // Get user location on mount
+  useEffect(() => {
+    requestLocation();
+  }, [requestLocation]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -125,6 +185,32 @@ export const Chat: FC = () => {
           <p className="text-sm text-text-secondary">
             {user?.full_name || user?.email}
           </p>
+          <div className="flex items-center gap-2 mt-1">
+            {location && (
+              <p className="text-xs text-text-muted flex items-center gap-1">
+                <span>📍</span>
+                {location.city && location.country
+                  ? `${location.city}, ${location.country}`
+                  : location.city || location.country || 'Unknown location'}
+              </p>
+            )}
+            {locationError && (
+              <p className="text-xs text-text-muted flex items-center gap-1">
+                <span>📍</span>
+                {locationError}
+              </p>
+            )}
+            {(location || locationError) && (
+              <button
+                onClick={requestLocation}
+                disabled={locationLoading}
+                className="text-xs text-accent hover:text-accent-dark disabled:opacity-50"
+                title="Refresh location"
+              >
+                {locationLoading ? '⟳' : '🔄'}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* New Conversation Button */}
@@ -158,23 +244,28 @@ export const Chat: FC = () => {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-medium text-navy truncate">
-                      {conv.title || 'Untitled'}
-                    </h3>
-                    <p className="text-xs text-text-muted truncate mt-1">
-                      {conv.latest_message?.content || 'No messages'}
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-sm font-medium text-navy truncate">
+                        {conv.title || 'Untitled'}
+                      </h3>
+                      <span className="text-xs text-text-muted ml-2 flex-shrink-0">
+                        {new Date(conv.updated_at).toLocaleTimeString('nl-NL', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                    <p className="text-xs text-text-muted truncate">
+                      {conv.latest_message?.content || 'No messages yet'}
                     </p>
                   </div>
                   <button
                     onClick={(e) => handleDeleteConversation(conv.id, e)}
-                    className="ml-2 text-text-muted hover:text-accent transition-colors"
+                    className="ml-2 text-text-muted hover:text-accent transition-colors flex-shrink-0"
                   >
                     ×
                   </button>
                 </div>
-                <p className="text-xs text-text-muted mt-2">
-                  {new Date(conv.updated_at).toLocaleDateString()}
-                </p>
               </div>
             ))
           )}
