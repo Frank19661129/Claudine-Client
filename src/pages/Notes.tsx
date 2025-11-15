@@ -29,11 +29,38 @@ export const Notes: FC = () => {
   const [editForm, setEditForm] = useState({ title: '', content: '', categories: '' });
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
+  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
 
   useEffect(() => {
     loadNotes();
     loadCounts();
   }, []);
+
+  // Apply filters
+  useEffect(() => {
+    let filtered = [...notes];
+
+    // Category filter
+    if (categoryFilter.length > 0) {
+      filtered = filtered.filter(note =>
+        note.categories && note.categories.some(cat => categoryFilter.includes(cat))
+      );
+    }
+
+    // Search filter
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(note =>
+        note.title.toLowerCase().includes(search) ||
+        note.content.toLowerCase().includes(search) ||
+        (note.categories && note.categories.some(cat => cat.toLowerCase().includes(search)))
+      );
+    }
+
+    setFilteredNotes(filtered);
+  }, [notes, categoryFilter, searchTerm]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -206,6 +233,24 @@ export const Notes: FC = () => {
     setOpenMenuId(openMenuId === noteId ? null : noteId);
   };
 
+  const getUniqueCategories = () => {
+    const categories = new Set<string>();
+    notes.forEach(note => {
+      if (note.categories) {
+        note.categories.forEach(cat => categories.add(cat));
+      }
+    });
+    return Array.from(categories).sort();
+  };
+
+  const toggleCategoryFilter = (category: string) => {
+    if (categoryFilter.includes(category)) {
+      setCategoryFilter(categoryFilter.filter(c => c !== category));
+    } else {
+      setCategoryFilter([...categoryFilter, category]);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-main">
       {/* Header */}
@@ -224,10 +269,85 @@ export const Notes: FC = () => {
       />
 
       <div className="p-6">
+        {/* Search and filters */}
+        <div className="bg-white rounded-card shadow-card p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Search */}
+            <div>
+              <label className="block text-xs font-medium text-navy mb-2 uppercase tracking-widest">
+                Zoeken
+              </label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Titel, inhoud, categorie..."
+                className="w-full px-3 py-2 bg-background border border-card-border rounded-input text-sm text-navy focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+              />
+            </div>
+
+            {/* Category filter */}
+            <div>
+              <label className="block text-xs font-medium text-navy mb-2 uppercase tracking-widest">
+                Categorieën
+              </label>
+              <div className="relative">
+                <div className="border border-card-border rounded-input bg-background p-2 max-h-32 overflow-y-auto">
+                  {getUniqueCategories().length === 0 ? (
+                    <p className="text-sm text-text-muted italic">Geen categorieën</p>
+                  ) : (
+                    getUniqueCategories().map(category => (
+                      <label key={category} className="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-50">
+                        <input
+                          type="checkbox"
+                          checked={categoryFilter.includes(category)}
+                          onChange={() => toggleCategoryFilter(category)}
+                          className="rounded border-gray-300 text-accent focus:ring-accent"
+                        />
+                        <span className="text-sm text-navy">{category}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Active filters */}
+          {(categoryFilter.length > 0 || searchTerm) && (
+            <div className="mt-4 pt-4 border-t border-card-border">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-medium text-navy uppercase tracking-widest">Actieve filters:</span>
+                {categoryFilter.map(category => (
+                  <span key={category} className="inline-flex items-center gap-1 px-2 py-1 bg-accent/10 text-accent text-xs rounded">
+                    Categorie: {category}
+                    <button onClick={() => toggleCategoryFilter(category)} className="hover:text-accent-dark">×</button>
+                  </span>
+                ))}
+                {searchTerm && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded">
+                    Zoeken: {searchTerm}
+                    <button onClick={() => setSearchTerm('')} className="hover:text-blue-900">×</button>
+                  </span>
+                )}
+                <button
+                  onClick={() => {
+                    setCategoryFilter([]);
+                    setSearchTerm('');
+                  }}
+                  className="text-xs text-accent hover:text-accent-dark uppercase tracking-widest"
+                >
+                  Wis alle filters
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Results count */}
         {!loading && (
           <div className="mb-4 text-sm text-text-secondary">
-            {notes.length} notitie{notes.length !== 1 ? 's' : ''}
+            {filteredNotes.length} van {notes.length} notitie{notes.length !== 1 ? 's' : ''}
           </div>
         )}
 
@@ -246,19 +366,23 @@ export const Notes: FC = () => {
               Opnieuw proberen
             </button>
           </div>
-        ) : notes.length === 0 ? (
+        ) : filteredNotes.length === 0 ? (
           <div className="bg-white rounded-card shadow-card p-12 text-center">
-            <p className="text-text-muted">Geen notities gevonden</p>
-            <button
-              onClick={() => setShowNewNoteModal(true)}
-              className="mt-4 px-4 py-2 bg-gradient-navy text-white rounded-button hover:shadow-button transition-all"
-            >
-              Maak je eerste notitie
-            </button>
+            <p className="text-text-muted">
+              {notes.length === 0 ? 'Geen notities gevonden' : 'Geen notities voldoen aan de filters'}
+            </p>
+            {notes.length === 0 && (
+              <button
+                onClick={() => setShowNewNoteModal(true)}
+                className="mt-4 px-4 py-2 bg-gradient-navy text-white rounded-button hover:shadow-button transition-all"
+              >
+                Maak je eerste notitie
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {notes.map((note) => (
+            {filteredNotes.map((note) => (
               <div
                 key={note.id}
                 className="bg-white rounded-card shadow-card p-6 hover:shadow-lg transition-shadow relative"
