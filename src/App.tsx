@@ -7,6 +7,7 @@ import { Register } from './pages/Register';
 import { Chat } from './pages/Chat';
 import { Settings } from './pages/Settings';
 import { Monitor } from './pages/Monitor';
+import { Tasks } from './pages/Tasks';
 
 const App: FC = () => {
   const { isAuthenticated, initAuth } = useAuthStore();
@@ -41,6 +42,14 @@ const App: FC = () => {
         <Route
           path="/monitor"
           element={isAuthenticated ? <Monitor /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/tasks"
+          element={isAuthenticated ? <Tasks /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/notes"
+          element={isAuthenticated ? <Navigate to="/chat" replace /> : <Navigate to="/login" replace />}
         />
 
         {/* Default redirect */}

@@ -2,6 +2,7 @@ import type { FC, ReactNode } from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { useChatStore } from '../stores/chatStore';
 
 interface HeaderProps {
   title?: string;
@@ -20,6 +21,7 @@ export const Header: FC<HeaderProps> = ({
 }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { cleanupEmptyConversations } = useChatStore();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -48,8 +50,10 @@ export const Header: FC<HeaderProps> = ({
     };
   }, [showUserMenu]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setShowUserMenu(false);
+    // Clean up any empty conversations before logging out
+    await cleanupEmptyConversations();
     logout();
   };
 

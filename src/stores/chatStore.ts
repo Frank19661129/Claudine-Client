@@ -19,6 +19,7 @@ interface ChatState {
   deleteConversation: (id: string) => Promise<void>;
   clearError: () => void;
   setCurrentConversation: (conversation: ConversationDetail | null) => void;
+  cleanupEmptyConversations: () => Promise<void>;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -193,5 +194,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   setCurrentConversation: (conversation: ConversationDetail | null) => {
     set({ currentConversation: conversation });
+  },
+
+  // Clean up empty conversations (no messages)
+  cleanupEmptyConversations: async () => {
+    const { currentConversation } = get();
+
+    // If current conversation is empty (no messages), delete it
+    if (currentConversation && (!currentConversation.messages || currentConversation.messages.length === 0)) {
+      try {
+        await api.deleteConversation(currentConversation.id);
+        set({ currentConversation: null });
+      } catch (error) {
+        console.error('Failed to cleanup empty conversation:', error);
+      }
+    }
   },
 }));
