@@ -5,6 +5,7 @@ import type { Message } from '../types';
 import { useAuthStore } from '../stores/authStore';
 import { useChatStore } from '../stores/chatStore';
 import { api } from '../services/api/client';
+import { Header } from '../components/Header';
 
 export const Chat: FC = () => {
   const navigate = useNavigate();
@@ -67,6 +68,45 @@ export const Chat: FC = () => {
     }
   }, [currentConversation, isStreaming]);
 
+  // Auto-generate title for chat conversations after first exchange
+  useEffect(() => {
+    const autoGenerateTitle = async () => {
+      if (!currentConversation) return;
+
+      // Only for chat mode
+      if (currentConversation.mode !== 'chat') return;
+
+      // Only if still has default title
+      const hasDefaultTitle = currentConversation.title === 'New Conversation' ||
+                             currentConversation.title === 'Nieuwe chat';
+      if (!hasDefaultTitle) return;
+
+      // Only if there are at least 2 messages (user + assistant)
+      if (!currentConversation.messages || currentConversation.messages.length < 2) return;
+
+      // Check if there's at least one assistant response
+      const hasAssistantResponse = currentConversation.messages.some(
+        msg => msg.role === 'assistant'
+      );
+      if (!hasAssistantResponse) return;
+
+      // Generate title
+      try {
+        const result = await api.generateConversationTitle(currentConversation.id);
+        if (result.success && result.title) {
+          // Reload conversation to get updated title
+          await loadConversation(currentConversation.id);
+          // Also reload conversations list to show new title
+          loadConversations();
+        }
+      } catch (err) {
+        console.error('Failed to auto-generate title:', err);
+      }
+    };
+
+    autoGenerateTitle();
+  }, [currentConversation?.messages?.length, currentConversation?.id]);
+
   const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -107,17 +147,30 @@ export const Chat: FC = () => {
       return conv.title;
     }
 
-    // Anders bepaal op basis van mode
+    // Anders bepaal op basis van mode in format "[Type]-chat"
     const modeMap: { [key: string]: string } = {
-      'task': 'Taak',
-      'calendar': 'Afspraak',
-      'reminder': 'Reminder',
-      'question': 'Vraag',
-      'note': 'Opmerking',
-      'chat': 'Overige chats'
+      'task': 'Taak-chat',
+      'calendar': 'Afspraak-chat',
+      'reminder': 'Herinnering-chat',
+      'question': 'Vraag-chat',
+      'note': 'Notitie-chat',
     };
 
-    return modeMap[conv.mode] || 'Overige chats';
+    // Voor bekende types, gebruik de mapping
+    if (conv.mode && modeMap[conv.mode]) {
+      return modeMap[conv.mode];
+    }
+
+    // Voor "overige" (chat mode of onbekend), genereer een samenvatting
+    // Als er messages zijn, gebruik de eerste user message als basis
+    if (conv.latest_message?.content) {
+      const content = conv.latest_message.content;
+      // Maak een korte samenvatting (eerste 30 karakters)
+      const summary = content.length > 30 ? content.substring(0, 30) + '...' : content;
+      return summary;
+    }
+
+    return 'Nieuwe chat';
   };
 
   const allMessages: Message[] = [
@@ -136,67 +189,24 @@ export const Chat: FC = () => {
   }
 
   return (
-    <div className="h-screen bg-gradient-main flex">
-      {/* Sidebar - Conversation List */}
-      <div className="w-80 bg-white border-r border-card-border flex flex-col">
-        {/* Header */}
-        <div className="bg-white border-b border-card-border p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-light text-navy tracking-wide">
-              Chat
-            </h1>
-            <div className="flex gap-3 items-center">
-              <button
-                onClick={() => navigate('/tasks')}
-                className="relative text-2xl hover:scale-110 transition-transform"
-                title="Taken"
-              >
-                📋
-                {openTasksCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-accent text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                    {openTasksCount}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => navigate('/notes')}
-                className="relative text-2xl hover:scale-110 transition-transform"
-                title="Notities"
-              >
-                📝
-                {notesCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-navy text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                    {notesCount}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => navigate('/monitor')}
-                className="text-2xl hover:scale-110 transition-transform"
-                title="Monitor"
-              >
-                🔍
-              </button>
-              <button
-                onClick={() => navigate('/settings')}
-                className="text-2xl hover:scale-110 transition-transform"
-                title="Instellingen"
-              >
-                ⚙️
-              </button>
-              <button
-                onClick={logout}
-                className="text-2xl hover:scale-110 transition-transform"
-                title="Uitloggen"
-              >
-                🚪
-              </button>
-            </div>
+    <div className="h-screen bg-gradient-main flex flex-col">
+      {/* Header */}
+      <Header
+        title="Chat"
+        openTasksCount={openTasksCount}
+        notesCount={notesCount}
+      />
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar - Conversation List */}
+        <div className="w-80 bg-white border-r border-card-border flex flex-col">
+          {/* Sidebar Header */}
+          <div className="bg-white border-b border-card-border p-4">
+            <p className="text-sm text-text-secondary">
+              {user?.full_name || user?.email}
+            </p>
           </div>
-          <p className="text-sm text-text-secondary">
-            {user?.full_name || user?.email}
-          </p>
-        </div>
 
         {/* New Conversation Button */}
         <div className="p-4">
@@ -395,24 +405,58 @@ export const Chat: FC = () => {
             </div>
           </>
         ) : (
-          /* No Conversation Selected */
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-2xl font-light text-navy tracking-wide mb-4">
-                Welcome to Claudine
-              </h2>
-              <p className="text-text-secondary mb-8">
-                Select a conversation or create a new one to get started
+          /* No Conversation Selected - VIKI Welcome Screen */
+          <div
+            className="flex-1 flex items-center justify-center relative overflow-hidden"
+            style={{
+              backgroundImage: 'url(/claudine-bg.jpg)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundColor: '#1a365d', // Fallback if image not loaded
+            }}
+          >
+            {/* Dark overlay for readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-navy/80 via-navy/70 to-navy/80"></div>
+
+            {/* Content */}
+            <div className="relative z-10 text-center max-w-2xl px-8">
+              {/* CLAUDINE Title */}
+              <h1 className="text-7xl font-light text-white tracking-widest mb-4 drop-shadow-lg">
+                CLAUDINE
+              </h1>
+
+              {/* Payoff with real smiley */}
+              <p className="text-2xl text-white/90 mb-12 font-light tracking-wide">
+                Hier om jou te helpen ;-)
               </p>
-              <button
-                onClick={handleNewConversation}
-                className="px-8 py-3 bg-gradient-navy text-white rounded-button font-light tracking-wide hover:shadow-button transition-all"
-              >
-                Start New Conversation
-              </button>
+
+              {/* Divider line */}
+              <div className="w-32 h-px bg-white/30 mx-auto mb-12"></div>
+
+              {/* Action Buttons */}
+              <div className="space-y-4">
+                <button
+                  onClick={handleNewConversation}
+                  className="w-full px-8 py-4 bg-gradient-navy text-white rounded-button font-light tracking-wide hover:shadow-button transition-all border border-white/20 hover:border-white/40"
+                >
+                  Nieuwe chat starten
+                </button>
+
+                {conversations.length > 0 && (
+                  <p className="text-white/70 text-sm">
+                    Of selecteer een bestaande chat in de lijst hiernaast
+                  </p>
+                )}
+              </div>
+
+              {/* Subtle hint text */}
+              <p className="mt-12 text-white/50 text-xs tracking-wider">
+                VIRTUAL INTERACTIVE KINETIC INTELLIGENCE
+              </p>
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

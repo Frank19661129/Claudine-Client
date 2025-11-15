@@ -2,6 +2,7 @@ import type { FC } from 'react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { Header } from '../components/Header';
 
 interface Task {
   id: string;
@@ -27,6 +28,8 @@ export const Tasks: FC = () => {
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [openTasksCount, setOpenTasksCount] = useState(0);
+  const [notesCount, setNotesCount] = useState(0);
 
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
@@ -52,10 +55,33 @@ export const Tasks: FC = () => {
 
   useEffect(() => {
     loadTasks();
+    loadCounts();
   }, []);
+
+  const loadCounts = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/notes`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        method: 'GET',
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setNotesCount(data.total || 0);
+      }
+    } catch (err) {
+      console.error('Failed to load notes count:', err);
+    }
+  };
 
   useEffect(() => {
     applyFiltersAndSort();
+    // Calculate open tasks count
+    const openCount = tasks.filter(t =>
+      t.status === 'new' || t.status === 'in_progress' || t.status === 'overdue'
+    ).length;
+    setOpenTasksCount(openCount);
   }, [tasks, statusFilter, priorityFilter, delegatedToFilter, searchTerm, sortConfig]);
 
   const loadTasks = async () => {
@@ -412,52 +438,19 @@ export const Tasks: FC = () => {
   return (
     <div className="min-h-screen bg-gradient-main">
       {/* Header */}
-      <div className="bg-white border-b border-card-border p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-light text-navy tracking-wide">
-            Taken Beheer
-          </h1>
-          <div className="flex gap-4 items-center">
-            <button
-              onClick={() => setShowNewTaskModal(true)}
-              className="px-4 py-2 bg-gradient-navy text-white rounded-button hover:shadow-button transition-all text-xs uppercase tracking-widest"
-            >
-              + Nieuwe Taak
-            </button>
-            <button
-              onClick={() => navigate('/chat')}
-              className="text-2xl hover:scale-110 transition-transform"
-              title="Chat"
-            >
-              💬
-            </button>
-            <button
-              onClick={() => navigate('/monitor')}
-              className="text-2xl hover:scale-110 transition-transform"
-              title="Monitor"
-            >
-              🔍
-            </button>
-            <button
-              onClick={() => navigate('/settings')}
-              className="text-2xl hover:scale-110 transition-transform"
-              title="Instellingen"
-            >
-              ⚙️
-            </button>
-            <button
-              onClick={logout}
-              className="text-2xl hover:scale-110 transition-transform"
-              title="Uitloggen"
-            >
-              🚪
-            </button>
-          </div>
-        </div>
-        <p className="text-sm text-text-secondary">
-          {user?.full_name || user?.email}
-        </p>
-      </div>
+      <Header
+        title="Taken"
+        openTasksCount={openTasksCount}
+        notesCount={notesCount}
+        actions={
+          <button
+            onClick={() => setShowNewTaskModal(true)}
+            className="px-4 py-2 bg-gradient-navy text-white rounded-button hover:shadow-button transition-all text-xs uppercase tracking-widest"
+          >
+            + Nieuwe Taak
+          </button>
+        }
+      />
 
       <div className="p-6">
         {/* Search and filters */}

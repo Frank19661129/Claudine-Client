@@ -100,6 +100,11 @@ class ApiClient {
     return data;
   }
 
+  async generateConversationTitle(id: string) {
+    const { data } = await this.client.post(`/conversations/${id}/generate-title`);
+    return data;
+  }
+
   // SSE streaming - deprecated, use StreamingService instead
   createStreamingConnection(_conversationId: string, _content: string): EventSource {
     // EventSource doesn't support POST or custom headers, so we'll use fetch with SSE

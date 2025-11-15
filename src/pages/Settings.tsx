@@ -2,12 +2,15 @@ import type { FC } from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api/client';
+import { Header } from '../components/Header';
 
 export const Settings: FC = () => {
   const navigate = useNavigate();
   const [connectedCalendars, setConnectedCalendars] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [openTasksCount, setOpenTasksCount] = useState(0);
+  const [notesCount, setNotesCount] = useState(0);
 
   // OAuth device code flow state
   const [showOAuthFlow, setShowOAuthFlow] = useState(false);
@@ -23,7 +26,21 @@ export const Settings: FC = () => {
   useEffect(() => {
     loadConnectedCalendars();
     requestLocation();
+    loadCounts();
   }, []);
+
+  const loadCounts = async () => {
+    try {
+      const [tasksCount, fetchedNotesCount] = await Promise.all([
+        api.getOpenTasksCount(),
+        api.getNotesCount(),
+      ]);
+      setOpenTasksCount(tasksCount);
+      setNotesCount(fetchedNotesCount);
+    } catch (err) {
+      console.error('Failed to load counts:', err);
+    }
+  };
 
   const requestLocation = useCallback(async () => {
     setLocationLoading(true);
@@ -165,19 +182,12 @@ export const Settings: FC = () => {
   return (
     <div className="min-h-screen bg-gradient-main">
       {/* Header */}
-      <div className="bg-white border-b border-card-border p-6">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div>
-            <button
-              onClick={() => navigate(-1)}
-              className="text-text-secondary hover:text-navy mb-2"
-            >
-              ← Terug
-            </button>
-            <h1 className="text-2xl font-light text-navy tracking-wide">Settings</h1>
-          </div>
-        </div>
-      </div>
+      <Header
+        title="Settings"
+        showBackButton={true}
+        openTasksCount={openTasksCount}
+        notesCount={notesCount}
+      />
 
       {/* Content */}
       <div className="max-w-4xl mx-auto p-6">
@@ -325,6 +335,13 @@ export const Settings: FC = () => {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Copyright Section */}
+        <div className="mt-8 text-center">
+          <p className="text-sm text-text-muted font-light tracking-wide">
+            Claudine © is bedacht, gemaakt en wordt onderhouden door GS.ai BV.
+          </p>
         </div>
       </div>
     </div>
