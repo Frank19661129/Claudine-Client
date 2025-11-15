@@ -27,8 +27,6 @@ export const Notes: FC = () => {
   const [showEditNoteModal, setShowEditNoteModal] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [editForm, setEditForm] = useState({ title: '', content: '', categories: '' });
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
@@ -61,23 +59,6 @@ export const Notes: FC = () => {
 
     setFilteredNotes(filtered);
   }, [notes, categoryFilter, searchTerm]);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setOpenMenuId(null);
-      }
-    };
-
-    if (openMenuId) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [openMenuId]);
 
   const loadCounts = async () => {
     try {
@@ -128,6 +109,8 @@ export const Notes: FC = () => {
         ? newNote.categories.split(',').map(c => c.trim()).filter(c => c.length > 0)
         : [];
 
+      console.log('Creating note with categories:', categories);
+
       const response = await fetch(`${apiUrl}/notes`, {
         method: 'POST',
         headers: {
@@ -165,6 +148,8 @@ export const Notes: FC = () => {
       const categories = editForm.categories
         ? editForm.categories.split(',').map(c => c.trim()).filter(c => c.length > 0)
         : [];
+
+      console.log('Updating note with categories:', categories);
 
       const response = await fetch(`${apiUrl}/notes/${editingNote.id}`, {
         method: 'PUT',
@@ -388,33 +373,28 @@ export const Notes: FC = () => {
                 className="bg-white rounded-card shadow-card p-6 hover:shadow-lg transition-shadow relative"
               >
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-lg font-medium text-navy flex-1 pr-2">{note.title}</h3>
-                  <div className="relative" ref={openMenuId === note.id ? menuRef : null}>
+                  <h3
+                    className="text-lg font-medium text-navy flex-1 pr-2 cursor-pointer hover:text-accent transition-colors"
+                    onClick={() => startEdit(note)}
+                    title="Klik om te bewerken"
+                  >
+                    {note.title}
+                  </h3>
+                  <div className="flex gap-1">
                     <button
-                      onClick={() => toggleMenu(note.id)}
-                      className="text-text-muted hover:text-navy transition-colors text-xl leading-none px-2"
-                      title="Meer opties"
+                      onClick={() => startEdit(note)}
+                      className="text-navy hover:text-accent transition-colors text-lg leading-none px-2"
+                      title="Bewerken"
                     >
-                      ⋯
+                      ✎
                     </button>
-
-                    {/* Dropdown menu */}
-                    {openMenuId === note.id && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-card shadow-lg border border-card-border z-10">
-                        <button
-                          onClick={() => startEdit(note)}
-                          className="w-full text-left px-4 py-2 hover:bg-background transition-colors text-sm text-navy border-b border-card-border"
-                        >
-                          ✎ Bewerken
-                        </button>
-                        <button
-                          onClick={() => deleteNote(note.id)}
-                          className="w-full text-left px-4 py-2 hover:bg-red-50 transition-colors text-sm text-red-600"
-                        >
-                          × Verwijderen
-                        </button>
-                      </div>
-                    )}
+                    <button
+                      onClick={() => deleteNote(note.id)}
+                      className="text-text-muted hover:text-red-600 transition-colors text-lg leading-none px-2"
+                      title="Verwijderen"
+                    >
+                      ×
+                    </button>
                   </div>
                 </div>
 
