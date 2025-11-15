@@ -161,7 +161,11 @@ class ApiClient {
     const { data } = await this.client.get('/tasks', {
       params: { status: 'new,in_progress,overdue', limit: 1000 },
     });
-    return data.tasks.length; // Count open tasks
+    // Handle both array response and object with tasks property
+    if (Array.isArray(data)) {
+      return data.length;
+    }
+    return data.tasks?.length || 0;
   }
 
   // Note endpoints
@@ -169,7 +173,7 @@ class ApiClient {
     const { data } = await this.client.get('/notes', {
       params: { limit: 1 }, // Just need total
     });
-    return data.total;
+    return data.total || 0;
   }
 }
 
