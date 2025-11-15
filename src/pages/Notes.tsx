@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { Header } from '../components/Header';
@@ -9,6 +9,7 @@ interface Note {
   id: string;
   title: string;
   content: string;
+  categories?: string[];
   created_at: string;
   updated_at: string;
 }
@@ -22,12 +23,34 @@ export const Notes: FC = () => {
   const [openTasksCount, setOpenTasksCount] = useState(0);
   const [notesCount, setNotesCount] = useState(0);
   const [showNewNoteModal, setShowNewNoteModal] = useState(false);
-  const [newNote, setNewNote] = useState({ title: '', content: '' });
+  const [newNote, setNewNote] = useState({ title: '', content: '', categories: '' });
+  const [showEditNoteModal, setShowEditNoteModal] = useState(false);
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [editForm, setEditForm] = useState({ title: '', content: '', categories: '' });
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadNotes();
     loadCounts();
   }, []);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+
+    if (openMenuId) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openMenuId]);
 
   const loadCounts = async () => {
     try {
@@ -74,6 +97,10 @@ export const Notes: FC = () => {
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8003/api/v1';
+      const categories = newNote.categories
+        ? newNote.categories.split(',').map(c => c.trim()).filter(c => c.length > 0)
+        : [];
+
       const response = await fetch(`${apiUrl}/notes`, {
         method: 'POST',
         headers: {
@@ -83,6 +110,7 @@ export const Notes: FC = () => {
         body: JSON.stringify({
           title: newNote.title,
           content: newNote.content,
+          categories,
         }),
       });
 
@@ -90,13 +118,62 @@ export const Notes: FC = () => {
         throw new Error('Failed to create note');
       }
 
-      setNewNote({ title: '', content: '' });
+      setNewNote({ title: '', content: '', categories: '' });
       setShowNewNoteModal(false);
       await loadNotes();
       await loadCounts();
     } catch (err: any) {
       setError(err.message);
     }
+  };
+
+  const updateNote = async () => {
+    if (!editingNote || !editForm.title.trim()) {
+      setError('Titel is verplicht');
+      return;
+    }
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8003/api/v1';
+      const categories = editForm.categories
+        ? editForm.categories.split(',').map(c => c.trim()).filter(c => c.length > 0)
+        : [];
+
+      const response = await fetch(`${apiUrl}/notes/${editingNote.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: editForm.title,
+          content: editForm.content,
+          categories,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update note');
+      }
+
+      setEditingNote(null);
+      setEditForm({ title: '', content: '', categories: '' });
+      setShowEditNoteModal(false);
+      await loadNotes();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const startEdit = (note: Note) => {
+    setEditingNote(note);
+    setEditForm({
+      title: note.title,
+      content: note.content,
+      categories: note.categories?.join(', ') || '',
+    });
+    setShowEditNoteModal(true);
+    setOpenMenuId(null);
   };
 
   const deleteNote = async (noteId: string) => {
@@ -117,11 +194,16 @@ export const Notes: FC = () => {
         throw new Error('Failed to delete note');
       }
 
+      setOpenMenuId(null);
       await loadNotes();
       await loadCounts();
     } catch (err: any) {
       setError(err.message);
     }
+  };
+
+  const toggleMenu = (noteId: string) => {
+    setOpenMenuId(openMenuId === noteId ? null : noteId);
   };
 
   return (
@@ -179,18 +261,53 @@ export const Notes: FC = () => {
             {notes.map((note) => (
               <div
                 key={note.id}
-                className="bg-white rounded-card shadow-card p-6 hover:shadow-lg transition-shadow"
+                className="bg-white rounded-card shadow-card p-6 hover:shadow-lg transition-shadow relative"
               >
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-lg font-medium text-navy">{note.title}</h3>
-                  <button
-                    onClick={() => deleteNote(note.id)}
-                    className="text-text-muted hover:text-red-600 transition-colors"
-                    title="Verwijderen"
-                  >
-                    ×
-                  </button>
+                  <h3 className="text-lg font-medium text-navy flex-1 pr-2">{note.title}</h3>
+                  <div className="relative" ref={openMenuId === note.id ? menuRef : null}>
+                    <button
+                      onClick={() => toggleMenu(note.id)}
+                      className="text-text-muted hover:text-navy transition-colors text-xl leading-none px-2"
+                      title="Meer opties"
+                    >
+                      ⋯
+                    </button>
+
+                    {/* Dropdown menu */}
+                    {openMenuId === note.id && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-card shadow-lg border border-card-border z-10">
+                        <button
+                          onClick={() => startEdit(note)}
+                          className="w-full text-left px-4 py-2 hover:bg-background transition-colors text-sm text-navy border-b border-card-border"
+                        >
+                          ✎ Bewerken
+                        </button>
+                        <button
+                          onClick={() => deleteNote(note.id)}
+                          className="w-full text-left px-4 py-2 hover:bg-red-50 transition-colors text-sm text-red-600"
+                        >
+                          × Verwijderen
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
+
+                {/* Categories */}
+                {note.categories && note.categories.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {note.categories.map((category, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex px-2 py-0.5 bg-accent/10 text-accent text-xs rounded"
+                      >
+                        {category}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 <p className="text-sm text-text-secondary whitespace-pre-wrap mb-4">
                   {note.content}
                 </p>
@@ -244,6 +361,21 @@ export const Notes: FC = () => {
                   className="w-full px-3 py-2 bg-background border border-card-border rounded-input text-sm text-navy focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                 />
               </div>
+
+              {/* Categories */}
+              <div>
+                <label className="block text-xs font-medium text-navy mb-2 uppercase tracking-widest">
+                  Categorieën
+                </label>
+                <input
+                  type="text"
+                  value={newNote.categories}
+                  onChange={(e) => setNewNote({ ...newNote, categories: e.target.value })}
+                  placeholder="categorie1, categorie2, categorie3..."
+                  className="w-full px-3 py-2 bg-background border border-card-border rounded-input text-sm text-navy focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                />
+                <p className="text-xs text-text-muted mt-1">Gescheiden door komma's</p>
+              </div>
             </div>
 
             {/* Footer */}
@@ -251,7 +383,7 @@ export const Notes: FC = () => {
               <button
                 onClick={() => {
                   setShowNewNoteModal(false);
-                  setNewNote({ title: '', content: '' });
+                  setNewNote({ title: '', content: '', categories: '' });
                 }}
                 className="px-4 py-2 bg-gray-600 text-white rounded-button hover:bg-gray-700 transition-colors text-xs uppercase tracking-widest"
               >
@@ -262,6 +394,83 @@ export const Notes: FC = () => {
                 className="px-4 py-2 bg-gradient-navy text-white rounded-button hover:shadow-button transition-all text-xs uppercase tracking-widest"
               >
                 Notitie Aanmaken
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Note Modal */}
+      {showEditNoteModal && editingNote && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-card shadow-lg max-w-2xl w-full">
+            <div className="p-6 border-b border-card-border">
+              <h2 className="text-xl font-light text-navy tracking-wide">Notitie Bewerken</h2>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Title */}
+              <div>
+                <label className="block text-xs font-medium text-navy mb-2 uppercase tracking-widest">
+                  Titel *
+                </label>
+                <input
+                  type="text"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  placeholder="Titel van de notitie..."
+                  className="w-full px-3 py-2 bg-background border border-card-border rounded-input text-sm text-navy focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                  autoFocus
+                />
+              </div>
+
+              {/* Content */}
+              <div>
+                <label className="block text-xs font-medium text-navy mb-2 uppercase tracking-widest">
+                  Inhoud
+                </label>
+                <textarea
+                  value={editForm.content}
+                  onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
+                  placeholder="Inhoud van de notitie..."
+                  rows={10}
+                  className="w-full px-3 py-2 bg-background border border-card-border rounded-input text-sm text-navy focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                />
+              </div>
+
+              {/* Categories */}
+              <div>
+                <label className="block text-xs font-medium text-navy mb-2 uppercase tracking-widest">
+                  Categorieën
+                </label>
+                <input
+                  type="text"
+                  value={editForm.categories}
+                  onChange={(e) => setEditForm({ ...editForm, categories: e.target.value })}
+                  placeholder="categorie1, categorie2, categorie3..."
+                  className="w-full px-3 py-2 bg-background border border-card-border rounded-input text-sm text-navy focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                />
+                <p className="text-xs text-text-muted mt-1">Gescheiden door komma's</p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-card-border flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowEditNoteModal(false);
+                  setEditingNote(null);
+                  setEditForm({ title: '', content: '', categories: '' });
+                }}
+                className="px-4 py-2 bg-gray-600 text-white rounded-button hover:bg-gray-700 transition-colors text-xs uppercase tracking-widest"
+              >
+                Annuleren
+              </button>
+              <button
+                onClick={updateNote}
+                className="px-4 py-2 bg-gradient-navy text-white rounded-button hover:shadow-button transition-all text-xs uppercase tracking-widest"
+              >
+                Opslaan
               </button>
             </div>
           </div>
