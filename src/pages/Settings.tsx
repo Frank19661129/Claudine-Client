@@ -40,8 +40,18 @@ export const Settings: FC = () => {
         try {
           // Use reverse geocoding to get city and country
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`
+            `http://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`,
+            {
+              headers: {
+                'User-Agent': 'ClaudineApp/1.0'
+              }
+            }
           );
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
           const data = await response.json();
 
           setLocation({
@@ -50,16 +60,20 @@ export const Settings: FC = () => {
           });
           setLocationLoading(false);
         } catch (err) {
-          setLocationError('Failed to get location details');
+          console.error('Geocoding error:', err);
+          setLocationError(`Failed to get location details: ${err.message}`);
           setLocationLoading(false);
         }
       },
       (error) => {
+        console.error('Geolocation error:', error);
         let errorMessage = 'Location permission denied';
         if (error.code === error.TIMEOUT) {
           errorMessage = 'Location request timed out';
         } else if (error.code === error.POSITION_UNAVAILABLE) {
           errorMessage = 'Location information unavailable';
+        } else if (error.code === error.PERMISSION_DENIED) {
+          errorMessage = 'Location permission denied. Check browser settings or use HTTPS.';
         }
         setLocationError(errorMessage);
         setLocationLoading(false);
@@ -67,6 +81,7 @@ export const Settings: FC = () => {
       {
         timeout: 10000,
         maximumAge: 300000, // Cache for 5 minutes
+        enableHighAccuracy: false
       }
     );
   }, []);

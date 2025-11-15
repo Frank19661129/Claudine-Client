@@ -150,6 +150,22 @@ class ApiClient {
     });
     return data;
   }
+
+  // Task endpoints
+  async getOpenTasksCount() {
+    const { data } = await this.client.get('/tasks', {
+      params: { status: 'new,in_progress,overdue', limit: 1000 },
+    });
+    return data.tasks.length; // Count open tasks
+  }
+
+  // Note endpoints
+  async getNotesCount() {
+    const { data } = await this.client.get('/notes', {
+      params: { limit: 1 }, // Just need total
+    });
+    return data.total;
+  }
 }
 
 export const api = new ApiClient();

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Message } from '../types';
 import { useAuthStore } from '../stores/authStore';
 import { useChatStore } from '../stores/chatStore';
+import { api } from '../services/api/client';
 
 export const Chat: FC = () => {
   const navigate = useNavigate();
@@ -25,13 +26,29 @@ export const Chat: FC = () => {
 
   const [messageInput, setMessageInput] = useState('');
   const [showCommandHints, setShowCommandHints] = useState(false);
+  const [openTasksCount, setOpenTasksCount] = useState(0);
+  const [notesCount, setNotesCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
 
   // Load conversations on mount
   useEffect(() => {
     loadConversations();
+    loadCounts();
   }, [loadConversations]);
+
+  const loadCounts = async () => {
+    try {
+      const [tasksCount, fetchedNotesCount] = await Promise.all([
+        api.getOpenTasksCount(),
+        api.getNotesCount(),
+      ]);
+      setOpenTasksCount(tasksCount);
+      setNotesCount(fetchedNotesCount);
+    } catch (err) {
+      console.error('Failed to load counts:', err);
+    }
+  };
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -131,10 +148,27 @@ export const Chat: FC = () => {
             <div className="flex gap-3 items-center">
               <button
                 onClick={() => navigate('/tasks')}
-                className="text-2xl hover:scale-110 transition-transform"
+                className="relative text-2xl hover:scale-110 transition-transform"
                 title="Taken"
               >
                 📋
+                {openTasksCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-accent text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    {openTasksCount}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => navigate('/notes')}
+                className="relative text-2xl hover:scale-110 transition-transform"
+                title="Notities"
+              >
+                📝
+                {notesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-navy text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    {notesCount}
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => navigate('/monitor')}
