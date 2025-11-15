@@ -167,7 +167,7 @@ export const Notes: FC = () => {
         : [];
 
       const response = await fetch(`${apiUrl}/notes/${editingNote.id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
