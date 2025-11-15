@@ -25,72 +25,13 @@ export const Chat: FC = () => {
 
   const [messageInput, setMessageInput] = useState('');
   const [showCommandHints, setShowCommandHints] = useState(false);
-  const [location, setLocation] = useState<{city?: string; country?: string} | null>(null);
-  const [locationError, setLocationError] = useState<string | null>(null);
-  const [locationLoading, setLocationLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const requestLocation = useCallback(() => {
-    setLocationLoading(true);
-    setLocationError(null);
-
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`,
-              {
-                headers: {
-                  'User-Agent': 'ClaudineApp/1.0'
-                }
-              }
-            );
-            const data = await response.json();
-            setLocation({
-              city: data.address?.city || data.address?.town || data.address?.village,
-              country: data.address?.country,
-            });
-            setLocationLoading(false);
-          } catch (err) {
-            console.error('Failed to reverse geocode:', err);
-            setLocation({
-              city: `${position.coords.latitude.toFixed(2)}°, ${position.coords.longitude.toFixed(2)}°`,
-              country: undefined,
-            });
-            setLocationLoading(false);
-          }
-        },
-        (error) => {
-          console.error('Geolocation error:', error);
-          if (error.code === error.PERMISSION_DENIED) {
-            setLocationError('Location permission denied');
-          } else {
-            setLocationError('Unable to access location');
-          }
-          setLocationLoading(false);
-        },
-        {
-          enableHighAccuracy: false,
-          timeout: 10000,
-          maximumAge: 0 // Force fresh location
-        }
-      );
-    } else {
-      setLocationError('Geolocation not supported');
-      setLocationLoading(false);
-    }
-  }, []);
+  const messageInputRef = useRef<HTMLInputElement>(null);
 
   // Load conversations on mount
   useEffect(() => {
     loadConversations();
   }, [loadConversations]);
-
-  // Get user location on mount
-  useEffect(() => {
-    requestLocation();
-  }, [requestLocation]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -101,6 +42,13 @@ export const Chat: FC = () => {
   useEffect(() => {
     setShowCommandHints(messageInput.startsWith('#'));
   }, [messageInput]);
+
+  // Auto-focus input field when conversation changes or after sending
+  useEffect(() => {
+    if (currentConversation && !isStreaming && messageInputRef.current) {
+      messageInputRef.current.focus();
+    }
+  }, [currentConversation, isStreaming]);
 
   const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault();
@@ -136,6 +84,25 @@ export const Chat: FC = () => {
     }
   };
 
+  const getConversationTitle = (conv: any) => {
+    // Als er een custom title is die niet "New Conversation" is, gebruik die
+    if (conv.title && conv.title !== 'New Conversation') {
+      return conv.title;
+    }
+
+    // Anders bepaal op basis van mode
+    const modeMap: { [key: string]: string } = {
+      'task': 'Taak',
+      'calendar': 'Afspraak',
+      'reminder': 'Reminder',
+      'question': 'Vraag',
+      'note': 'Opmerking',
+      'chat': 'Overige chats'
+    };
+
+    return modeMap[conv.mode] || 'Overige chats';
+  };
+
   const allMessages: Message[] = [
     ...(currentConversation?.messages || []),
   ];
@@ -156,61 +123,45 @@ export const Chat: FC = () => {
       {/* Sidebar - Conversation List */}
       <div className="w-80 bg-white border-r border-card-border flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-card-border">
+        <div className="bg-white border-b border-card-border p-6">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-light text-navy tracking-wide">
-              CLAUDINE
+              Chat
             </h1>
-            <div className="flex gap-4">
+            <div className="flex gap-3 items-center">
+              <button
+                onClick={() => navigate('/tasks')}
+                className="text-2xl hover:scale-110 transition-transform"
+                title="Taken"
+              >
+                📋
+              </button>
               <button
                 onClick={() => navigate('/monitor')}
-                className="text-xs text-text-secondary hover:text-accent transition-colors uppercase tracking-widest"
+                className="text-2xl hover:scale-110 transition-transform"
+                title="Monitor"
               >
-                🔍 Monitor
+                🔍
               </button>
               <button
                 onClick={() => navigate('/settings')}
-                className="text-xs text-text-secondary hover:text-accent transition-colors uppercase tracking-widest"
+                className="text-2xl hover:scale-110 transition-transform"
+                title="Instellingen"
               >
-                Settings
+                ⚙️
               </button>
               <button
                 onClick={logout}
-                className="text-xs text-text-secondary hover:text-accent transition-colors uppercase tracking-widest"
+                className="text-2xl hover:scale-110 transition-transform"
+                title="Uitloggen"
               >
-                Logout
+                🚪
               </button>
             </div>
           </div>
           <p className="text-sm text-text-secondary">
             {user?.full_name || user?.email}
           </p>
-          <div className="flex items-center gap-2 mt-1">
-            {location && (
-              <p className="text-xs text-text-muted flex items-center gap-1">
-                <span>📍</span>
-                {location.city && location.country
-                  ? `${location.city}, ${location.country}`
-                  : location.city || location.country || 'Unknown location'}
-              </p>
-            )}
-            {locationError && (
-              <p className="text-xs text-text-muted flex items-center gap-1">
-                <span>📍</span>
-                {locationError}
-              </p>
-            )}
-            {(location || locationError) && (
-              <button
-                onClick={requestLocation}
-                disabled={locationLoading}
-                className="text-xs text-accent hover:text-accent-dark disabled:opacity-50"
-                title="Refresh location"
-              >
-                {locationLoading ? '⟳' : '🔄'}
-              </button>
-            )}
-          </div>
         </div>
 
         {/* New Conversation Button */}
@@ -246,7 +197,7 @@ export const Chat: FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <h3 className="text-sm font-medium text-navy truncate">
-                        {conv.title || 'Untitled'}
+                        {getConversationTitle(conv)}
                       </h3>
                       <span className="text-xs text-text-muted ml-2 flex-shrink-0">
                         {new Date(conv.updated_at).toLocaleTimeString('nl-NL', {
@@ -287,11 +238,34 @@ export const Chat: FC = () => {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div
+              className="flex-1 overflow-y-auto p-6 space-y-4 relative"
+              style={{
+                backgroundImage: `
+                  repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 200px,
+                    rgba(26, 54, 93, 0.02) 200px,
+                    rgba(26, 54, 93, 0.02) 400px
+                  )
+                `,
+                backgroundSize: '400px 400px'
+              }}
+            >
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Ctext x='60' y='90' font-family='Arial, sans-serif' font-size='32' fill='%231a365d' opacity='0.08' font-weight='300' letter-spacing='3'%3EGS.ai%3C/text%3E%3Ctext x='450' y='150' font-family='Arial, sans-serif' font-size='26' fill='%231a365d' opacity='0.08' font-weight='300' letter-spacing='2'%3EClaudine Assistent%3C/text%3E%3Ctext x='200' y='280' font-family='Arial, sans-serif' font-size='30' fill='%231a365d' opacity='0.07' font-weight='300' letter-spacing='3'%3EGS.ai%3C/text%3E%3Ctext x='520' y='400' font-family='Arial, sans-serif' font-size='28' fill='%231a365d' opacity='0.07' font-weight='300' letter-spacing='2'%3EClaudine Assistent%3C/text%3E%3Ctext x='100' y='500' font-family='Arial, sans-serif' font-size='32' fill='%231a365d' opacity='0.08' font-weight='300' letter-spacing='3'%3EGS.ai%3C/text%3E%3Ctext x='350' y='550' font-family='Arial, sans-serif' font-size='24' fill='%231a365d' opacity='0.07' font-weight='300' letter-spacing='2'%3EClaudine Assistent%3C/text%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'repeat',
+                  backgroundSize: '800px 600px',
+                  backgroundPosition: '0 0'
+                }}
+              />
               {allMessages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${
+                  className={`flex relative z-10 ${
                     message.role === 'user' ? 'justify-end' : 'justify-start'
                   }`}
                 >
@@ -320,7 +294,7 @@ export const Chat: FC = () => {
                   </div>
                 </div>
               ))}
-              <div ref={messagesEndRef} />
+              <div ref={messagesEndRef} className="relative z-10" />
             </div>
 
             {/* Error Display */}
@@ -344,9 +318,15 @@ export const Chat: FC = () => {
                 <p className="text-xs text-accent uppercase tracking-widest mb-2">
                   Available Commands:
                 </p>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  <span className="text-xs bg-white px-3 py-1 rounded-button text-navy">
+                    #task - Create tasks
+                  </span>
                   <span className="text-xs bg-white px-3 py-1 rounded-button text-navy">
                     #calendar - Manage calendar events
+                  </span>
+                  <span className="text-xs bg-white px-3 py-1 rounded-button text-navy">
+                    #reminder - Set reminders
                   </span>
                   <span className="text-xs bg-white px-3 py-1 rounded-button text-navy">
                     #note - Take notes
@@ -362,11 +342,12 @@ export const Chat: FC = () => {
             <div className="bg-white border-t border-card-border p-6">
               <form onSubmit={handleSendMessage} className="flex gap-4">
                 <input
+                  ref={messageInputRef}
                   type="text"
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
                   disabled={isStreaming}
-                  placeholder="Type a message... (try #calendar, #note, #scan)"
+                  placeholder="Type a message... (try #task, #calendar, #reminder)"
                   className="flex-1 px-4 py-3 bg-background border border-card-border rounded-input text-navy focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all disabled:opacity-50"
                 />
                 <button

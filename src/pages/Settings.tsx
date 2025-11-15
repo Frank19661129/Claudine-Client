@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api/client';
 
@@ -15,8 +15,60 @@ export const Settings: FC = () => {
   const [verificationUrl, setVerificationUrl] = useState('');
   const [polling, setPolling] = useState(false);
 
+  // Location state
+  const [location, setLocation] = useState<{city?: string; country?: string} | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+
   useEffect(() => {
     loadConnectedCalendars();
+    requestLocation();
+  }, []);
+
+  const requestLocation = useCallback(async () => {
+    setLocationLoading(true);
+    setLocationError(null);
+
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser');
+      setLocationLoading(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          // Use reverse geocoding to get city and country
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`
+          );
+          const data = await response.json();
+
+          setLocation({
+            city: data.address?.city || data.address?.town || data.address?.village || 'Unknown',
+            country: data.address?.country || 'Unknown'
+          });
+          setLocationLoading(false);
+        } catch (err) {
+          setLocationError('Failed to get location details');
+          setLocationLoading(false);
+        }
+      },
+      (error) => {
+        let errorMessage = 'Location permission denied';
+        if (error.code === error.TIMEOUT) {
+          errorMessage = 'Location request timed out';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          errorMessage = 'Location information unavailable';
+        }
+        setLocationError(errorMessage);
+        setLocationLoading(false);
+      },
+      {
+        timeout: 10000,
+        maximumAge: 300000, // Cache for 5 minutes
+      }
+    );
   }, []);
 
   const loadConnectedCalendars = async () => {
@@ -102,10 +154,10 @@ export const Settings: FC = () => {
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div>
             <button
-              onClick={() => navigate('/chat')}
+              onClick={() => navigate(-1)}
               className="text-text-secondary hover:text-navy mb-2"
             >
-              ← Back to Chat
+              ← Terug
             </button>
             <h1 className="text-2xl font-light text-navy tracking-wide">Settings</h1>
           </div>
@@ -204,6 +256,57 @@ export const Settings: FC = () => {
                     </p>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Location Section */}
+        <div className="bg-gradient-card rounded-card shadow-card p-6">
+          <h2 className="text-xl font-light text-navy mb-4 tracking-wide">
+            Location
+          </h2>
+
+          {locationLoading && (
+            <div className="p-4 bg-background rounded-input">
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-sm text-text-secondary">Requesting location...</p>
+              </div>
+            </div>
+          )}
+
+          {locationError && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-input mb-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-red-600">{locationError}</p>
+                <button
+                  onClick={requestLocation}
+                  className="text-sm text-accent hover:text-accent-dark font-medium"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          )}
+
+          {location && !locationLoading && (
+            <div className="p-4 bg-background rounded-input">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-navy">
+                    {location.city}, {location.country}
+                  </p>
+                  <p className="text-xs text-text-muted mt-1">
+                    Current location detected
+                  </p>
+                </div>
+                <button
+                  onClick={requestLocation}
+                  className="text-sm text-accent hover:text-accent-dark"
+                >
+                  Refresh
+                </button>
               </div>
             </div>
           )}
