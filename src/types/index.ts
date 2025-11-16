@@ -4,6 +4,7 @@ export interface User {
   email: string;
   full_name: string;
   provider: string;
+  photo_url?: string | null;
 }
 
 export interface AuthResponse {

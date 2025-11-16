@@ -13,6 +13,7 @@ class ApiClient {
       headers: {
         'Content-Type': 'application/json',
       },
+      // withCredentials not needed - we use JWT tokens in Authorization header
     });
 
     // Request interceptor: add auth token
@@ -60,6 +61,19 @@ class ApiClient {
 
   async getCurrentUser(): Promise<User> {
     const { data } = await this.client.get<User>('/auth/me');
+    return data;
+  }
+
+  async uploadProfilePhoto(file: File): Promise<User> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Don't set Content-Type manually - let Axios set it with the correct boundary
+    const { data } = await this.client.post<User>('/auth/upload-photo', formData, {
+      headers: {
+        'Content-Type': undefined, // Remove the default application/json header
+      },
+    });
     return data;
   }
 
