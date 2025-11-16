@@ -45,8 +45,8 @@ const App: FC = () => {
     <BrowserRouter>
       <Routes>
         {/* Public routes */}
-        <Route path="/v2/test" element={<TestPage />} />
-        <Route path="/v2/debug" element={<DebugPage />} />
+        <Route path="/test" element={<TestPage />} />
+        <Route path="/debug" element={<DebugPage />} />
         <Route
           path="/login"
           element={!isAuthenticated ? <Login /> : <Navigate to="/chat" replace />}
@@ -56,7 +56,41 @@ const App: FC = () => {
           element={!isAuthenticated ? <Register /> : <Navigate to="/chat" replace />}
         />
 
-        {/* V2 Routes - New Silver Cloud Design */}
+        {/* Main Routes - V2 Silver Cloud Design (Default) */}
+        <Route
+          path="/chat"
+          element={isAuthenticated ? <MainLayout><ChatPage /></MainLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/tasks"
+          element={isAuthenticated ? <MainLayout><TasksPage /></MainLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/notes"
+          element={isAuthenticated ? <MainLayout><NotesPage /></MainLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/inbox"
+          element={isAuthenticated ? <MainLayout><InboxPage /></MainLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/monitor"
+          element={isAuthenticated ? <MainLayout><MonitorPage /></MainLayout> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/settings"
+          element={isAuthenticated ? <MainLayout><SettingsPage /></MainLayout> : <Navigate to="/login" replace />}
+        />
+
+        {/* V2 Routes - Explicit v2 prefix (same as main routes) */}
+        <Route
+          path="/v2/test"
+          element={<TestPage />}
+        />
+        <Route
+          path="/v2/debug"
+          element={<DebugPage />}
+        />
         <Route
           path="/v2/chat"
           element={isAuthenticated ? <MainLayout><ChatPage /></MainLayout> : <Navigate to="/login" replace />}
@@ -82,30 +116,30 @@ const App: FC = () => {
           element={isAuthenticated ? <MainLayout><SettingsPage /></MainLayout> : <Navigate to="/login" replace />}
         />
 
-        {/* V1 Protected routes - Original Design */}
+        {/* V1 Routes - Legacy/Original Design (preserved for fallback) */}
         <Route
-          path="/chat"
+          path="/v1/chat"
           element={isAuthenticated ? <Chat /> : <Navigate to="/login" replace />}
         />
         <Route
-          path="/settings"
-          element={isAuthenticated ? <Settings /> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/monitor"
-          element={isAuthenticated ? <Monitor /> : <Navigate to="/login" replace />}
-        />
-        <Route
-          path="/tasks"
+          path="/v1/tasks"
           element={isAuthenticated ? <Tasks /> : <Navigate to="/login" replace />}
         />
         <Route
-          path="/notes"
+          path="/v1/notes"
           element={isAuthenticated ? <Notes /> : <Navigate to="/login" replace />}
         />
         <Route
-          path="/inbox"
+          path="/v1/inbox"
           element={isAuthenticated ? <Inbox /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/v1/monitor"
+          element={isAuthenticated ? <Monitor /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/v1/settings"
+          element={isAuthenticated ? <Settings /> : <Navigate to="/login" replace />}
         />
 
         {/* Default redirect */}
