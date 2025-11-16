@@ -10,6 +10,7 @@ interface HeaderProps {
   actions?: ReactNode;
   openTasksCount?: number;
   notesCount?: number;
+  inboxCount?: number;
 }
 
 export const Header: FC<HeaderProps> = ({
@@ -17,7 +18,8 @@ export const Header: FC<HeaderProps> = ({
   showBackButton = false,
   actions,
   openTasksCount = 0,
-  notesCount = 0
+  notesCount = 0,
+  inboxCount = 0
 }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
@@ -114,6 +116,20 @@ export const Header: FC<HeaderProps> = ({
               {notesCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-navy text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold" style={{ fontSize: '0.65rem' }}>
                   {notesCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => navigate('/inbox')}
+              className="relative text-lg hover:scale-110 transition-transform"
+              title="Inbox"
+              style={{ fontSize: '1.35rem' }}
+            >
+              📥
+              {inboxCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold" style={{ fontSize: '0.65rem' }}>
+                  {inboxCount}
                 </span>
               )}
             </button>

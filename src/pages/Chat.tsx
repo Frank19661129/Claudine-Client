@@ -29,6 +29,7 @@ export const Chat: FC = () => {
   const [showCommandHints, setShowCommandHints] = useState(false);
   const [openTasksCount, setOpenTasksCount] = useState(0);
   const [notesCount, setNotesCount] = useState(0);
+  const [inboxCount, setInboxCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
 
@@ -40,12 +41,14 @@ export const Chat: FC = () => {
 
   const loadCounts = async () => {
     try {
-      const [tasksCount, fetchedNotesCount] = await Promise.all([
+      const [tasksCount, fetchedNotesCount, fetchedInboxCount] = await Promise.all([
         api.getOpenTasksCount(),
         api.getNotesCount(),
+        api.getInboxCount(),
       ]);
       setOpenTasksCount(tasksCount);
       setNotesCount(fetchedNotesCount);
+      setInboxCount(fetchedInboxCount);
     } catch (err) {
       console.error('Failed to load counts:', err);
     }
@@ -195,6 +198,7 @@ export const Chat: FC = () => {
         title="Chat"
         openTasksCount={openTasksCount}
         notesCount={notesCount}
+        inboxCount={inboxCount}
       />
 
       {/* Main Content Area */}

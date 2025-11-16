@@ -175,6 +175,80 @@ class ApiClient {
     });
     return data.total || 0;
   }
+
+  // Inbox endpoints
+  async getInboxItems(filters?: {
+    status?: string;
+    type?: string;
+    priority?: string;
+    skip?: number;
+    limit?: number;
+  }) {
+    const { data } = await this.client.get('/inbox', {
+      params: {
+        status_filter: filters?.status,
+        type_filter: filters?.type,
+        priority: filters?.priority,
+        skip: filters?.skip || 0,
+        limit: filters?.limit || 100,
+      },
+    });
+    return data;
+  }
+
+  async getInboxItem(id: string) {
+    const { data } = await this.client.get(`/inbox/${id}`);
+    return data;
+  }
+
+  async createInboxItem(item: {
+    type: string;
+    source: string;
+    subject?: string;
+    content?: string;
+    raw_data?: any;
+    priority?: string;
+  }) {
+    const { data } = await this.client.post('/inbox', item);
+    return data;
+  }
+
+  async requestAISuggestion(id: string) {
+    const { data } = await this.client.post(`/inbox/${id}/suggest`);
+    return data;
+  }
+
+  async acceptSuggestion(id: string) {
+    const { data } = await this.client.post(`/inbox/${id}/accept`);
+    return data;
+  }
+
+  async modifyAndAccept(id: string, modifications: {
+    action: string;
+    data: any;
+  }) {
+    const { data } = await this.client.post(`/inbox/${id}/modify`, modifications);
+    return data;
+  }
+
+  async rejectInboxItem(id: string, reason?: string) {
+    const { data } = await this.client.post(`/inbox/${id}/reject`, { reason });
+    return data;
+  }
+
+  async archiveInboxItem(id: string) {
+    const { data } = await this.client.post(`/inbox/${id}/archive`);
+    return data;
+  }
+
+  async deleteInboxItem(id: string) {
+    await this.client.delete(`/inbox/${id}`);
+  }
+
+  async getInboxCount() {
+    const { data } = await this.client.get('/inbox/count');
+    return data.count || 0;
+  }
 }
 
 export const api = new ApiClient();

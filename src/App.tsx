@@ -9,6 +9,7 @@ import { Settings } from './pages/Settings';
 import { Monitor } from './pages/Monitor';
 import { Tasks } from './pages/Tasks';
 import { Notes } from './pages/Notes';
+import { Inbox } from './pages/Inbox';
 
 const App: FC = () => {
   const { isAuthenticated, initAuth } = useAuthStore();
@@ -51,6 +52,10 @@ const App: FC = () => {
         <Route
           path="/notes"
           element={isAuthenticated ? <Notes /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/inbox"
+          element={isAuthenticated ? <Inbox /> : <Navigate to="/login" replace />}
         />
 
         {/* Default redirect */}
