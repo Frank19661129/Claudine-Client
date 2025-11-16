@@ -173,9 +173,9 @@ export const ChatPage: FC = () => {
   }
 
   return (
-    <div className="flex-1 flex overflow-hidden -m-6">
+    <div className="absolute inset-0 flex overflow-hidden">
         {/* Sidebar - Conversation List */}
-        <div className="w-80 bg-white border-r border-card-border flex flex-col">
+        <div className="w-80 bg-white border-r border-card-border flex flex-col flex-shrink-0">
         {/* New Conversation Button */}
         <div className="p-4">
           <button

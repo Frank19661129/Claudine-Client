@@ -455,7 +455,7 @@
 
   /* Content Area */
   .content {
-    @apply flex-1 overflow-y-auto bg-background;
+    @apply flex-1 overflow-y-auto bg-background relative;
   }
 
   .content-body {
