@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Photo Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .box {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            cursor: pointer;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Photo Upload</h1>
+
+    <div class="box">
+        <h2>1. Login First</h2>
+        <input type="email" id="email" placeholder="Email" value="frank@madano.nl">
+        <input type="password" id="password" placeholder="Password" value="Iremember1!">
+        <button onclick="login()">Login</button>
+        <div id="login-result"></div>
+    </div>
+
+    <div class="box">
+        <h2>2. Upload Photo</h2>
+        <input type="file" id="photo" accept="image/*">
+        <button onclick="uploadPhoto()">Upload Photo</button>
+        <div id="upload-result"></div>
+    </div>
+
+    <div class="box">
+        <h2>Debug Info</h2>
+        <pre id="debug"></pre>
+    </div>
+
+    <script>
+        const API_URL = 'http://100.99.206.31:8003/api/v1';
+        let token = null;
+
+        function log(message) {
+            const debug = document.getElementById('debug');
+            debug.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('login-result');
+
+            log('Attempting login...');
+
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    token = data.access_token;
+                    resultDiv.innerHTML = `<p class="success">✓ Login successful! Token: ${token.substring(0, 20)}...</p>`;
+                    log('Login successful, token received');
+                } else {
+                    resultDiv.innerHTML = `<p class="error">✗ Login failed: ${data.detail}</p>`;
+                    log('Login failed: ' + data.detail);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">✗ Error: ${error.message}</p>`;
+                log('Login error: ' + error.message);
+            }
+        }
+
+        async function uploadPhoto() {
+            const resultDiv = document.getElementById('upload-result');
+            const fileInput = document.getElementById('photo');
+
+            if (!token) {
+                resultDiv.innerHTML = '<p class="error">Please login first!</p>';
+                return;
+            }
+
+            if (!fileInput.files.length) {
+                resultDiv.innerHTML = '<p class="error">Please select a file!</p>';
+                return;
+            }
+
+            const file = fileInput.files[0];
+            log(`Uploading file: ${file.name}, size: ${file.size}, type: ${file.type}`);
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                log('Sending upload request...');
+                const response = await fetch(`${API_URL}/auth/upload-photo`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        // Don't set Content-Type - let browser set it with boundary
+                    },
+                    body: formData
+                });
+
+                log(`Response status: ${response.status} ${response.statusText}`);
+                log(`Response headers: ${JSON.stringify([...response.headers.entries()])}`);
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `<p class="success">✓ Upload successful!</p>
+                        <p>Photo URL length: ${data.photo_url ? data.photo_url.length : 0} chars</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    log('Upload successful');
+                } else {
+                    resultDiv.innerHTML = `<p class="error">✗ Upload failed: ${JSON.stringify(data)}</p>`;
+                    log('Upload failed: ' + JSON.stringify(data));
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">✗ Error: ${error.message}</p>`;
+                log('Upload error: ' + error.message);
+            }
+        }
+
+        log('Test page loaded');
+        log('API URL: ' + API_URL);
+    </script>
+</body>
+</html>

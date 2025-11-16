@@ -1,0 +1,464 @@
+/*
+ * Claudine Theme - Silver Cloud met Lenovo Rood
+ * Gebaseerd op Paperless-NGX design principes
+ * Colors: Navy #002366 + Silver #ececec + Lenovo Red #E2231A
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   BASE LAYER - Global Resets
+   ============================================ */
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-text-primary font-sans text-base;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 rounded;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500;
+  }
+}
+
+/* ============================================
+   COMPONENTS LAYER - Reusable Components
+   ============================================ */
+
+@layer components {
+
+  /* Top Bar - Dark Navy */
+  .topbar {
+    @apply h-topbar bg-navy text-white border-b border-navy-dark;
+    @apply flex items-center px-4;
+  }
+
+  .topbar-logo {
+    @apply text-base font-semibold tracking-tight;
+  }
+
+  .topbar-search {
+    @apply w-96 h-8 px-3 text-sm rounded;
+    @apply bg-white/15 border border-white/20 text-white placeholder-white/60;
+  }
+
+  .topbar-search:focus {
+    @apply outline-none bg-white/25 border-white/40;
+  }
+
+  .topbar-left {
+    @apply flex items-center gap-2;
+  }
+
+  .topbar-right {
+    @apply flex items-center gap-4 ml-auto;
+  }
+
+  .user-menu {
+    @apply flex items-center gap-2 px-2 py-1 rounded hover:bg-white/10 transition-colors cursor-pointer;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    @apply w-sidebar bg-gray-50 border-r border-gray-300 overflow-y-auto;
+  }
+
+  .sidebar-section {
+    @apply py-4 border-b border-gray-300;
+  }
+
+  .sidebar-section:last-child {
+    @apply border-b-0;
+  }
+
+  .sidebar-header {
+    @apply text-tiny uppercase tracking-wide text-gray-600 font-semibold;
+    @apply px-4 pb-2;
+  }
+
+  .sidebar-item {
+    @apply flex items-center px-4 py-1.5 text-sm text-gray-700;
+    @apply cursor-pointer transition-colors;
+  }
+
+  .sidebar-item:hover {
+    @apply bg-gray-200;
+  }
+
+  .sidebar-item.active {
+    @apply bg-white border-l-[3px] border-navy font-medium text-navy;
+  }
+
+  .sidebar-count {
+    @apply ml-auto bg-navy text-white text-tiny px-1.5 py-0.5 rounded-full;
+    @apply font-semibold min-w-[20px] text-center;
+  }
+
+  .sidebar-count.zero {
+    @apply bg-gray-300 text-gray-600;
+  }
+
+  /* Content Header */
+  .content-header {
+    @apply bg-white border-b border-gray-300 p-3;
+    @apply flex items-center justify-between;
+  }
+
+  .content-title {
+    @apply text-lg font-normal text-gray-800;
+  }
+
+  .content-subtitle {
+    @apply text-sm text-gray-600 mt-0.5;
+  }
+
+  /* Filter Bar */
+  .filter-bar {
+    @apply bg-gray-50 border-b border-gray-300 p-2.5;
+    @apply flex gap-3 items-center flex-wrap;
+  }
+
+  .filter-label {
+    @apply text-xs text-gray-600 font-medium uppercase tracking-wide;
+  }
+
+  .filter-select {
+    @apply px-2 py-1 border border-gray-300 rounded text-xs bg-white cursor-pointer;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply px-3.5 py-1.5 rounded text-sm border border-gray-300;
+    @apply bg-white cursor-pointer transition-all font-medium;
+  }
+
+  .btn:hover {
+    @apply bg-gray-50 border-gray-400;
+  }
+
+  .btn-primary {
+    @apply bg-navy text-white border-navy;
+  }
+
+  .btn-primary:hover {
+    @apply bg-navy-light border-navy-light;
+  }
+
+  .btn-accent {
+    @apply bg-accent text-white border-accent;
+  }
+
+  .btn-accent:hover {
+    @apply bg-accent-dark border-accent-dark;
+  }
+
+  /* Action Buttons (small, icon-only) */
+  .action-btn {
+    @apply w-6 h-6 border border-gray-300 bg-white rounded;
+    @apply cursor-pointer text-xs flex items-center justify-center;
+    @apply transition-all;
+  }
+
+  .action-btn:hover {
+    @apply bg-gray-50 border-gray-400;
+  }
+
+  .action-btn.complete {
+    @apply text-status-done;
+  }
+
+  .action-btn.complete:hover {
+    @apply bg-green-50 border-green-400;
+  }
+
+  .action-btn.edit {
+    @apply text-navy;
+  }
+
+  .action-btn.edit:hover {
+    @apply bg-blue-50 border-blue-400;
+  }
+
+  .action-btn.delete {
+    @apply text-priority-high;
+  }
+
+  .action-btn.delete:hover {
+    @apply bg-red-50 border-red-400;
+  }
+
+  /* Tables */
+  .table-container {
+    @apply overflow-x-auto;
+  }
+
+  table {
+    @apply w-full border-collapse text-sm;
+  }
+
+  thead {
+    @apply bg-gray-50 sticky top-0 z-10;
+  }
+
+  th {
+    @apply text-left px-4 py-2.5 font-semibold text-gray-700;
+    @apply border-b-2 border-gray-300 text-xs uppercase tracking-wide;
+    @apply cursor-pointer whitespace-nowrap;
+  }
+
+  th:hover {
+    @apply bg-gray-100;
+  }
+
+  td {
+    @apply px-4 py-2.5 border-b border-gray-100;
+  }
+
+  tbody tr {
+    @apply transition-colors;
+  }
+
+  tbody tr:hover {
+    @apply bg-gray-50;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-block px-2 py-0.5 rounded text-tiny font-semibold;
+    @apply uppercase tracking-wide;
+  }
+
+  .badge-status-new {
+    @apply bg-blue-100 text-status-new;
+  }
+
+  .badge-status-open {
+    @apply bg-yellow-100 text-status-open;
+  }
+
+  .badge-status-progress {
+    @apply bg-cyan-100 text-status-progress;
+  }
+
+  .badge-status-done {
+    @apply bg-green-100 text-status-done;
+  }
+
+  .badge-status-cancelled {
+    @apply bg-gray-100 text-status-cancelled;
+  }
+
+  .badge-priority-high {
+    @apply text-priority-high font-semibold;
+  }
+
+  .badge-priority-medium {
+    @apply text-priority-medium;
+  }
+
+  .badge-priority-low {
+    @apply text-priority-low;
+  }
+
+  /* Tags */
+  .tag {
+    @apply inline-block px-1.5 py-0.5 bg-gray-100 border border-gray-300;
+    @apply rounded text-tiny text-gray-700 mr-1;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white border border-gray-300 rounded-lg p-4;
+  }
+
+  .card:hover {
+    @apply border-gray-400 shadow-md;
+  }
+
+  /* Empty State */
+  .empty-state {
+    @apply text-center py-20 px-5 text-gray-500;
+  }
+
+  .empty-state-icon {
+    @apply text-5xl mb-4 opacity-30;
+  }
+
+  .empty-state-text {
+    @apply text-base mb-4;
+  }
+
+  /* Logo Component - GS.ai with Red Dot */
+  .logo-gs {
+    @apply text-navy font-bold;
+  }
+
+  .logo-ai {
+    @apply text-navy font-light;
+  }
+
+  .logo-ai::before {
+    content: '.';
+    @apply text-accent;
+  }
+
+  /* Notification Badge */
+  .notification-badge {
+    @apply absolute -top-1 -right-1 bg-accent text-white;
+    @apply text-[10px] px-1.5 py-0.5 rounded-full font-semibold;
+  }
+}
+
+/* ============================================
+   UTILITIES LAYER - Helper Classes
+   ============================================ */
+
+@layer utilities {
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Truncate text */
+  .truncate-2-lines {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .truncate-3-lines {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Gradient backgrounds */
+  .bg-gradient-silver {
+    background: linear-gradient(135deg, #fcfcfc 0%, #ececec 100%);
+  }
+
+  .bg-gradient-navy {
+    background: linear-gradient(135deg, #002366 0%, #003d99 100%);
+  }
+
+  .bg-gradient-accent {
+    background: linear-gradient(135deg, #E2231A 0%, #b31b14 100%);
+  }
+
+  /* Text gradients */
+  .text-gradient-navy {
+    background: linear-gradient(135deg, #002366 0%, #424242 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* ============================================
+     V2 LAYOUT COMPONENTS
+     ============================================ */
+
+  /* Top Bar - Navy Blue */
+  .top-bar {
+    @apply bg-navy h-16 flex items-center justify-between px-6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .top-bar-left {
+    @apply flex items-center gap-4;
+  }
+
+  .top-bar-right {
+    @apply flex items-center gap-4;
+  }
+
+  .user-menu {
+    @apply flex items-center gap-2 text-white cursor-pointer hover:opacity-80 transition-opacity;
+    @apply text-sm font-medium;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    @apply w-64 bg-white border-r border-gray-200 overflow-y-auto;
+    @apply flex flex-col;
+  }
+
+  .sidebar-section {
+    @apply py-4 px-3;
+  }
+
+  .sidebar-header {
+    @apply text-xs uppercase tracking-widest text-text-secondary font-semibold mb-2 px-3;
+  }
+
+  .sidebar-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer;
+    @apply text-text-primary hover:bg-gray-100 transition-colors;
+    @apply relative;
+  }
+
+  .sidebar-item.active {
+    @apply bg-navy text-white;
+  }
+
+  .sidebar-item.active:hover {
+    @apply bg-navy opacity-90;
+  }
+
+  .sidebar-icon {
+    @apply text-lg;
+  }
+
+  .sidebar-label {
+    @apply text-sm font-medium flex-1;
+  }
+
+  .sidebar-count {
+    @apply bg-accent text-white text-xs px-2 py-0.5 rounded-full font-semibold;
+  }
+
+  /* Main Container */
+  .main-container {
+    @apply flex flex-1 overflow-hidden;
+  }
+
+  /* Content Area */
+  .content {
+    @apply flex-1 overflow-y-auto bg-background;
+  }
+
+  .content-body {
+    @apply max-w-7xl mx-auto;
+  }
+}

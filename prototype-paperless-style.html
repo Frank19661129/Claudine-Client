@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claudine - Paperless Style</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 14px;
+      color: #1a1a1a;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    /* Top Bar - Dark green like Paperless */
+    .top-bar {
+      height: 48px;
+      background: #1a5632;
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border-bottom: 1px solid #0f3d20;
+    }
+
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .search-bar {
+      width: 400px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      padding: 0 12px;
+      color: white;
+      font-size: 13px;
+    }
+
+    .search-bar::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .top-bar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .notification-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px 8px;
+      position: relative;
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: 0;
+      right: 4px;
+      background: #dc2626;
+      color: white;
+      font-size: 10px;
+      padding: 1px 4px;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+
+    .user-menu {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 4px 12px;
+      border-radius: 4px;
+      color: white;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Main Layout */
+    .main-container {
+      display: flex;
+      height: calc(100vh - 48px);
+    }
+
+    /* Sidebar - Like Paperless */
+    .sidebar {
+      width: 220px;
+      background: #f8f9fa;
+      border-right: 1px solid #dee2e6;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .sidebar-section {
+      padding: 16px 0;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .sidebar-section:last-child {
+      border-bottom: none;
+    }
+
+    .sidebar-header {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #6c757d;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      padding: 0 16px 8px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      padding: 6px 16px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #212529;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .sidebar-item:hover {
+      background: #e9ecef;
+    }
+
+    .sidebar-item.active {
+      background: #ffffff;
+      border-left: 3px solid #1a5632;
+      font-weight: 500;
+      color: #1a5632;
+    }
+
+    .sidebar-icon {
+      width: 20px;
+      margin-right: 10px;
+      font-size: 16px;
+    }
+
+    .sidebar-label {
+      flex: 1;
+    }
+
+    .sidebar-count {
+      background: #1a5632;
+      color: white;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 600;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .sidebar-count.zero {
+      background: #dee2e6;
+      color: #6c757d;
+    }
+
+    /* Content Area */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Content Header */
+    .content-header {
+      background: white;
+      border-bottom: 1px solid #dee2e6;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .content-title {
+      font-size: 18px;
+      font-weight: 400;
+      color: #212529;
+    }
+
+    .content-subtitle {
+      font-size: 13px;
+      color: #6c757d;
+      margin-top: 2px;
+    }
+
+    .content-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 13px;
+      border: 1px solid #dee2e6;
+      background: white;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-weight: 500;
+    }
+
+    .btn:hover {
+      background: #f8f9fa;
+      border-color: #adb5bd;
+    }
+
+    .btn-primary {
+      background: #1a5632;
+      color: white;
+      border-color: #1a5632;
+    }
+
+    .btn-primary:hover {
+      background: #0f3d20;
+      border-color: #0f3d20;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      background: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+      padding: 10px 20px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-label {
+      font-size: 12px;
+      color: #6c757d;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .filter-select {
+      padding: 4px 8px;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      font-size: 12px;
+      background: white;
+      cursor: pointer;
+    }
+
+    .filter-tag {
+      padding: 4px 10px;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 12px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-tag-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: #6c757d;
+      padding: 0;
+      line-height: 1;
+    }
+
+    /* Content Body */
+    .content-body {
+      flex: 1;
+      overflow-y: auto;
+      background: white;
+    }
+
+    /* Table View - Like Paperless Documents List */
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead {
+      background: #f8f9fa;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    th {
+      text-align: left;
+      padding: 10px 16px;
+      font-weight: 600;
+      color: #495057;
+      border-bottom: 2px solid #dee2e6;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    th:hover {
+      background: #e9ecef;
+    }
+
+    th .sort-icon {
+      margin-left: 4px;
+      font-size: 10px;
+      color: #adb5bd;
+    }
+
+    td {
+      padding: 10px 16px;
+      border-bottom: 1px solid #f1f3f5;
+    }
+
+    tbody tr {
+      transition: background 0.1s;
+    }
+
+    tbody tr:hover {
+      background: #f8f9fa;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .status-new {
+      background: #e7f5ff;
+      color: #1864ab;
+    }
+
+    .status-open {
+      background: #fff3bf;
+      color: #e67700;
+    }
+
+    .status-done {
+      background: #d3f9d8;
+      color: #2b8a3e;
+    }
+
+    .priority-high {
+      color: #dc2626;
+      font-weight: 600;
+    }
+
+    .priority-medium {
+      color: #ea580c;
+    }
+
+    .priority-low {
+      color: #16a34a;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 6px;
+      background: #f1f3f5;
+      border: 1px solid #dee2e6;
+      border-radius: 3px;
+      font-size: 11px;
+      margin-right: 4px;
+      color: #495057;
+    }
+
+    .actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .action-btn {
+      width: 24px;
+      height: 24px;
+      border: 1px solid #dee2e6;
+      background: white;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .action-btn:hover {
+      background: #f8f9fa;
+      border-color: #adb5bd;
+    }
+
+    .action-btn.complete {
+      color: #2b8a3e;
+    }
+
+    .action-btn.edit {
+      color: #1864ab;
+    }
+
+    .action-btn.delete {
+      color: #dc2626;
+    }
+
+    /* List View - For Conversations */
+    .list-view {
+      padding: 0;
+    }
+
+    .list-item {
+      padding: 12px 20px;
+      border-bottom: 1px solid #f1f3f5;
+      cursor: pointer;
+      transition: background 0.1s;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .list-item:hover {
+      background: #f8f9fa;
+    }
+
+    .list-item-icon {
+      width: 36px;
+      height: 36px;
+      background: #e7f5ff;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .list-item-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .list-item-title {
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: #212529;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .list-item-snippet {
+      font-size: 12px;
+      color: #6c757d;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .list-item-meta {
+      display: flex;
+      gap: 12px;
+      margin-top: 6px;
+      font-size: 11px;
+      color: #868e96;
+    }
+
+    .list-item-actions {
+      display: flex;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .list-item:hover .list-item-actions {
+      opacity: 1;
+    }
+
+    /* Stats Cards - For Dashboard */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      padding: 16px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #6c757d;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 300;
+      color: #212529;
+      margin-bottom: 4px;
+    }
+
+    .stat-change {
+      font-size: 11px;
+      color: #2b8a3e;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #868e96;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f3f5;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #ced4da;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #adb5bd;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <div class="logo">✓ Claudine</div>
+      <input type="search" class="search-bar" placeholder="Zoeken...">
+    </div>
+    <div class="top-bar-right">
+      <button class="notification-btn">
+        🔔
+        <span class="notification-badge">3</span>
+      </button>
+      <div class="user-menu">
+        frank
+        <span>▾</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="main-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <!-- Views -->
+      <div class="sidebar-section">
+        <div class="sidebar-header">Views</div>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">💬</span>
+          <span class="sidebar-label">Chat</span>
+          <span class="sidebar-count">15</span>
+        </a>
+        <a href="#" class="sidebar-item active">
+          <span class="sidebar-icon">📋</span>
+          <span class="sidebar-label">Taken</span>
+          <span class="sidebar-count">12</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">📝</span>
+          <span class="sidebar-label">Notities</span>
+          <span class="sidebar-count">42</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">📊</span>
+          <span class="sidebar-label">Monitor</span>
+          <span class="sidebar-count zero">0</span>
+        </a>
+      </div>
+
+      <!-- Opgeslagen Filters -->
+      <div class="sidebar-section">
+        <div class="sidebar-header">Opgeslagen Filters</div>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">⚡</span>
+          <span class="sidebar-label">Vandaag</span>
+          <span class="sidebar-count">4</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">🔴</span>
+          <span class="sidebar-label">Hoge prioriteit</span>
+          <span class="sidebar-count">7</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">⏰</span>
+          <span class="sidebar-label">Te laat</span>
+          <span class="sidebar-count">2</span>
+        </a>
+      </div>
+
+      <!-- Beheren -->
+      <div class="sidebar-section">
+        <div class="sidebar-header">Beheren</div>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">👤</span>
+          <span class="sidebar-label">Personen</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">🏷️</span>
+          <span class="sidebar-label">Labels</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">⚙️</span>
+          <span class="sidebar-label">Instellingen</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Content Area -->
+    <main class="content">
+
+      <!-- Content Header -->
+      <div class="content-header">
+        <div>
+          <div class="content-title">Taken</div>
+          <div class="content-subtitle">127 taken totaal, 12 open</div>
+        </div>
+        <div class="content-actions">
+          <button class="btn">Exporteren</button>
+          <button class="btn btn-primary">+ Nieuwe Taak</button>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <span class="filter-label">Filters:</span>
+        <select class="filter-select">
+          <option>Status: Alle</option>
+          <option>Nieuw</option>
+          <option>Bezig</option>
+          <option>Klaar</option>
+        </select>
+        <select class="filter-select">
+          <option>Prioriteit: Alle</option>
+          <option>Hoog</option>
+          <option>Normaal</option>
+          <option>Laag</option>
+        </select>
+        <select class="filter-select">
+          <option>Gedelegeerd: Alle</option>
+          <option>Frank</option>
+          <option>Sarah</option>
+          <option>Niet gedelegeerd</option>
+        </select>
+        <div style="flex: 1;"></div>
+        <span style="font-size: 12px; color: #6c757d;">12 resultaten</span>
+      </div>
+
+      <!-- Content Body - Table -->
+      <div class="content-body">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 40px;"><input type="checkbox"></th>
+                <th style="width: 80px;">ID <span class="sort-icon">↓</span></th>
+                <th>Titel</th>
+                <th style="width: 120px;">Status</th>
+                <th style="width: 100px;">Prioriteit</th>
+                <th style="width: 140px;">Gedelegeerd aan</th>
+                <th style="width: 100px;">Deadline</th>
+                <th style="width: 100px;">Aangemaakt</th>
+                <th style="width: 100px;">Acties</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td><strong>T-001</strong></td>
+                <td>
+                  <div style="font-weight: 500; margin-bottom: 3px;">Finish quarterly report</div>
+                  <div style="font-size: 12px; color: #6c757d;">Complete Q4 analysis and prepare presentation slides</div>
+                  <div style="margin-top: 4px;">
+                    <span class="tag">Finance</span>
+                    <span class="tag">Urgent</span>
+                  </div>
+                </td>
+                <td><span class="status-badge status-open">Open</span></td>
+                <td class="priority-high">Hoog</td>
+                <td>Frank</td>
+                <td style="font-weight: 500; color: #dc2626;">Vandaag</td>
+                <td style="color: #868e96;">15 nov</td>
+                <td>
+                  <div class="actions">
+                    <button class="action-btn complete" title="Voltooien">✓</button>
+                    <button class="action-btn edit" title="Wijzigen">✎</button>
+                    <button class="action-btn delete" title="Verwijderen">×</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td><strong>T-002</strong></td>
+                <td>
+                  <div style="font-weight: 500; margin-bottom: 3px;">Review contract amendments</div>
+                  <div style="font-size: 12px; color: #6c757d;">Check legal terms and conditions for new supplier</div>
+                  <div style="margin-top: 4px;">
+                    <span class="tag">Legal</span>
+                  </div>
+                </td>
+                <td><span class="status-badge status-done">Klaar</span></td>
+                <td class="priority-medium">Normaal</td>
+                <td>Sarah</td>
+                <td>20 nov</td>
+                <td style="color: #868e96;">14 nov</td>
+                <td>
+                  <div class="actions">
+                    <button class="action-btn edit" title="Wijzigen">✎</button>
+                    <button class="action-btn delete" title="Verwijderen">×</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td><strong>T-003</strong></td>
+                <td>
+                  <div style="font-weight: 500; margin-bottom: 3px;">Update company website</div>
+                  <div style="font-size: 12px; color: #6c757d;">Refresh homepage content and add new case studies</div>
+                  <div style="margin-top: 4px;">
+                    <span class="tag">Marketing</span>
+                    <span class="tag">Website</span>
+                  </div>
+                </td>
+                <td><span class="status-badge status-new">Nieuw</span></td>
+                <td class="priority-low">Laag</td>
+                <td>—</td>
+                <td>30 nov</td>
+                <td style="color: #868e96;">13 nov</td>
+                <td>
+                  <div class="actions">
+                    <button class="action-btn complete" title="Voltooien">✓</button>
+                    <button class="action-btn edit" title="Wijzigen">✎</button>
+                    <button class="action-btn delete" title="Verwijderen">×</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td><strong>T-004</strong></td>
+                <td>
+                  <div style="font-weight: 500; margin-bottom: 3px;">Schedule team building event</div>
+                  <div style="font-size: 12px; color: #6c757d;">Organize Q1 team activity and book venue</div>
+                  <div style="margin-top: 4px;">
+                    <span class="tag">HR</span>
+                  </div>
+                </td>
+                <td><span class="status-badge status-open">Open</span></td>
+                <td class="priority-medium">Normaal</td>
+                <td>Frank</td>
+                <td>10 dec</td>
+                <td style="color: #868e96;">12 nov</td>
+                <td>
+                  <div class="actions">
+                    <button class="action-btn complete" title="Voltooien">✓</button>
+                    <button class="action-btn edit" title="Wijzigen">✎</button>
+                    <button class="action-btn delete" title="Verwijderen">×</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td><strong>T-005</strong></td>
+                <td>
+                  <div style="font-weight: 500; margin-bottom: 3px;">Prepare budget proposal</div>
+                  <div style="font-size: 12px; color: #6c757d;">Create 2025 budget breakdown by department</div>
+                  <div style="margin-top: 4px;">
+                    <span class="tag">Finance</span>
+                    <span class="tag">Planning</span>
+                  </div>
+                </td>
+                <td><span class="status-badge status-open">Open</span></td>
+                <td class="priority-high">Hoog</td>
+                <td>Sarah</td>
+                <td style="font-weight: 500; color: #e67700;">18 nov</td>
+                <td style="color: #868e96;">10 nov</td>
+                <td>
+                  <div class="actions">
+                    <button class="action-btn complete" title="Voltooien">✓</button>
+                    <button class="action-btn edit" title="Wijzigen">✎</button>
+                    <button class="action-btn delete" title="Verwijderen">×</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><input type="checkbox"></td>
+                <td><strong>T-006</strong></td>
+                <td>
+                  <div style="font-weight: 500; margin-bottom: 3px;">Conduct customer interviews</div>
+                  <div style="font-size: 12px; color: #6c757d;">Interview 5 key customers about product feedback</div>
+                  <div style="margin-top: 4px;">
+                    <span class="tag">Research</span>
+                  </div>
+                </td>
+                <td><span class="status-badge status-new">Nieuw</span></td>
+                <td class="priority-medium">Normaal</td>
+                <td>—</td>
+                <td>25 nov</td>
+                <td style="color: #868e96;">9 nov</td>
+                <td>
+                  <div class="actions">
+                    <button class="action-btn complete" title="Voltooien">✓</button>
+                    <button class="action-btn edit" title="Wijzigen">✎</button>
+                    <button class="action-btn delete" title="Verwijderen">×</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+</body>
+</html>

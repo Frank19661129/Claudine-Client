@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claudine - Evernote Style</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 14px;
+      color: #2c3e50;
+      background: #f7f9fc;
+      overflow: hidden;
+    }
+
+    /* Top Bar - Clean and minimal */
+    .top-bar {
+      height: 52px;
+      background: white;
+      border-bottom: 1px solid #e4e7eb;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a365d;
+      letter-spacing: -0.3px;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+    }
+
+    .search-bar {
+      width: 420px;
+      height: 36px;
+      background: #f7f9fc;
+      border: 1px solid #e4e7eb;
+      border-radius: 6px;
+      padding: 0 12px 0 36px;
+      font-size: 14px;
+      color: #2c3e50;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: 12px center;
+      transition: all 0.2s;
+    }
+
+    .search-bar:focus {
+      outline: none;
+      border-color: #1a365d;
+      background-color: white;
+      box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.1);
+    }
+
+    .search-bar::placeholder {
+      color: #94a3b8;
+    }
+
+    .top-bar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      background: none;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: background 0.2s;
+      color: #64748b;
+      font-size: 18px;
+    }
+
+    .icon-btn:hover {
+      background: #f1f5f9;
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: #ef4444;
+      color: white;
+      font-size: 10px;
+      padding: 2px 5px;
+      border-radius: 10px;
+      font-weight: 600;
+      line-height: 1;
+    }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px 6px 6px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .user-menu:hover {
+      background: #f1f5f9;
+    }
+
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .user-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #1e293b;
+    }
+
+    .user-dropdown {
+      font-size: 10px;
+      color: #94a3b8;
+    }
+
+    /* Main Layout */
+    .main-container {
+      display: flex;
+      height: calc(100vh - 52px);
+    }
+
+    /* Sidebar - More breathing room than Paperless */
+    .sidebar {
+      width: 240px;
+      background: white;
+      border-right: 1px solid #e4e7eb;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .sidebar-section {
+      padding: 20px 16px 16px;
+    }
+
+    .sidebar-section:not(:last-child) {
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .sidebar-header {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      padding: 0 8px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      margin-bottom: 2px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #475569;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .sidebar-item:hover {
+      background: #f7f9fc;
+      color: #1e293b;
+    }
+
+    .sidebar-item.active {
+      background: #eff6ff;
+      color: #1e40af;
+      font-weight: 500;
+    }
+
+    .sidebar-icon {
+      width: 20px;
+      margin-right: 10px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sidebar-label {
+      flex: 1;
+    }
+
+    .sidebar-count {
+      background: #e4e7eb;
+      color: #64748b;
+      font-size: 11px;
+      padding: 3px 7px;
+      border-radius: 12px;
+      font-weight: 600;
+      min-width: 22px;
+      text-align: center;
+    }
+
+    .sidebar-item.active .sidebar-count {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .sidebar-item .sidebar-count.has-items {
+      background: #1a365d;
+      color: white;
+    }
+
+    /* Content Area */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #f7f9fc;
+    }
+
+    /* Content Header */
+    .content-header {
+      background: white;
+      border-bottom: 1px solid #e4e7eb;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .content-title-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .content-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .content-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1e293b;
+      letter-spacing: -0.3px;
+    }
+
+    .content-subtitle {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    .content-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      border: 1px solid #e4e7eb;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover {
+      background: #f7f9fc;
+      border-color: #cbd5e1;
+    }
+
+    .btn-primary {
+      background: #1a365d;
+      color: white;
+      border-color: #1a365d;
+    }
+
+    .btn-primary:hover {
+      background: #0f2942;
+      border-color: #0f2942;
+      box-shadow: 0 2px 4px rgba(26, 54, 93, 0.2);
+    }
+
+    /* Toolbar */
+    .toolbar {
+      background: white;
+      border-bottom: 1px solid #e4e7eb;
+      padding: 12px 24px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .toolbar-group {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .toolbar-divider {
+      width: 1px;
+      height: 24px;
+      background: #e4e7eb;
+      margin: 0 6px;
+    }
+
+    .toolbar-btn {
+      padding: 6px 12px;
+      border: 1px solid #e4e7eb;
+      background: white;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .toolbar-btn:hover {
+      background: #f7f9fc;
+      border-color: #cbd5e1;
+    }
+
+    .toolbar-btn.active {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+      color: #1e40af;
+    }
+
+    .results-count {
+      margin-left: auto;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    /* Content Body */
+    .content-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+
+    /* Card Grid View */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    .task-card {
+      background: white;
+      border: 1px solid #e4e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .task-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .task-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .task-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #cbd5e1;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .task-checkbox:hover {
+      border-color: #1a365d;
+    }
+
+    .task-id {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .task-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: #1e293b;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    .task-description {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .task-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: #64748b;
+      padding: 4px 8px;
+      background: #f7f9fc;
+      border-radius: 4px;
+    }
+
+    .meta-icon {
+      font-size: 14px;
+    }
+
+    .task-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #f1f5f9;
+      border: 1px solid #e4e7eb;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #475569;
+      font-weight: 500;
+    }
+
+    .task-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 12px;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    .priority-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .priority-high {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .priority-medium {
+      background: #fed7aa;
+      color: #ea580c;
+    }
+
+    .priority-low {
+      background: #d1fae5;
+      color: #059669;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .status-new {
+      background: #e0e7ff;
+      color: #4338ca;
+    }
+
+    .status-open {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .status-done {
+      background: #d1fae5;
+      color: #059669;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .task-card:hover .task-actions {
+      opacity: 1;
+    }
+
+    .action-btn {
+      width: 28px;
+      height: 28px;
+      border: 1px solid #e4e7eb;
+      background: white;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      color: #64748b;
+    }
+
+    .action-btn:hover {
+      background: #f7f9fc;
+      border-color: #cbd5e1;
+      color: #1e293b;
+    }
+
+    .action-btn.complete {
+      color: #059669;
+    }
+
+    .action-btn.complete:hover {
+      background: #d1fae5;
+      border-color: #6ee7b7;
+    }
+
+    .action-btn.edit {
+      color: #2563eb;
+    }
+
+    .action-btn.edit:hover {
+      background: #dbeafe;
+      border-color: #93c5fd;
+    }
+
+    .action-btn.delete {
+      color: #dc2626;
+    }
+
+    .action-btn.delete:hover {
+      background: #fee2e2;
+      border-color: #fca5a5;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      opacity: 0.3;
+    }
+
+    .empty-state-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+      color: #64748b;
+      margin-bottom: 20px;
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f7f9fc;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* View Switcher */
+    .view-switcher {
+      display: flex;
+      gap: 4px;
+      background: #f7f9fc;
+      padding: 3px;
+      border-radius: 6px;
+      border: 1px solid #e4e7eb;
+    }
+
+    .view-option {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
+      border: none;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    .view-option.active {
+      background: white;
+      color: #1e293b;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <div class="logo">
+        <div class="logo-icon">C</div>
+        Claudine
+      </div>
+      <input type="search" class="search-bar" placeholder="Zoek in taken, notities, gesprekken...">
+    </div>
+    <div class="top-bar-right">
+      <button class="icon-btn">
+        🔔
+        <span class="notification-badge">3</span>
+      </button>
+      <div class="user-menu">
+        <div class="user-avatar">F</div>
+        <span class="user-name">Frank</span>
+        <span class="user-dropdown">▾</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="main-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <!-- Views -->
+      <div class="sidebar-section">
+        <div class="sidebar-header">Werkruimte</div>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">💬</span>
+          <span class="sidebar-label">Chat</span>
+          <span class="sidebar-count has-items">15</span>
+        </a>
+        <a href="#" class="sidebar-item active">
+          <span class="sidebar-icon">📋</span>
+          <span class="sidebar-label">Taken</span>
+          <span class="sidebar-count has-items">12</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">📝</span>
+          <span class="sidebar-label">Notities</span>
+          <span class="sidebar-count has-items">42</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">📊</span>
+          <span class="sidebar-label">Monitor</span>
+          <span class="sidebar-count">0</span>
+        </a>
+      </div>
+
+      <!-- Quick Filters -->
+      <div class="sidebar-section">
+        <div class="sidebar-header">Snelle Filters</div>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">⚡</span>
+          <span class="sidebar-label">Vandaag</span>
+          <span class="sidebar-count has-items">4</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">🔥</span>
+          <span class="sidebar-label">Hoge prioriteit</span>
+          <span class="sidebar-count has-items">7</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">⏰</span>
+          <span class="sidebar-label">Deadline deze week</span>
+          <span class="sidebar-count has-items">9</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">✅</span>
+          <span class="sidebar-label">Voltooid</span>
+          <span class="sidebar-count">115</span>
+        </a>
+      </div>
+
+      <!-- Organization -->
+      <div class="sidebar-section">
+        <div class="sidebar-header">Organiseren</div>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">👤</span>
+          <span class="sidebar-label">Mijn taken</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">👥</span>
+          <span class="sidebar-label">Gedelegeerd</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">🏷️</span>
+          <span class="sidebar-label">Labels</span>
+        </a>
+        <a href="#" class="sidebar-item">
+          <span class="sidebar-icon">⚙️</span>
+          <span class="sidebar-label">Instellingen</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Content Area -->
+    <main class="content">
+
+      <!-- Content Header -->
+      <div class="content-header">
+        <div class="content-title-section">
+          <div class="content-icon">📋</div>
+          <div>
+            <div class="content-title">Taken</div>
+            <div class="content-subtitle">127 taken totaal · 12 open · 115 voltooid</div>
+          </div>
+        </div>
+        <div class="content-actions">
+          <button class="btn">
+            <span>⚙️</span>
+            Beheren
+          </button>
+          <button class="btn btn-primary">
+            <span>+</span>
+            Nieuwe Taak
+          </button>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="toolbar-group">
+          <button class="toolbar-btn active">
+            <span>📋</span>
+            Alle
+          </button>
+          <button class="toolbar-btn">
+            <span>⏳</span>
+            Open
+          </button>
+          <button class="toolbar-btn">
+            <span>✅</span>
+            Voltooid
+          </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <div class="toolbar-group">
+          <button class="toolbar-btn">
+            <span>🔴</span>
+            Hoog
+          </button>
+          <button class="toolbar-btn">
+            <span>🟡</span>
+            Normaal
+          </button>
+          <button class="toolbar-btn">
+            <span>🟢</span>
+            Laag
+          </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <div class="view-switcher">
+          <button class="view-option active">Kaarten</button>
+          <button class="view-option">Lijst</button>
+          <button class="view-option">Tabel</button>
+        </div>
+
+        <div class="results-count">12 taken</div>
+      </div>
+
+      <!-- Content Body - Card Grid -->
+      <div class="content-body">
+        <div class="card-grid">
+
+          <!-- Task Card 1 -->
+          <div class="task-card">
+            <div class="task-card-header">
+              <div class="task-checkbox"></div>
+              <div class="task-id">T-001</div>
+            </div>
+            <div class="task-title">Finish quarterly report</div>
+            <div class="task-description">
+              Complete Q4 analysis and prepare presentation slides for the board meeting next week.
+            </div>
+            <div class="task-meta">
+              <div class="meta-item">
+                <span class="meta-icon">📅</span>
+                Vandaag
+              </div>
+              <div class="meta-item">
+                <span class="meta-icon">👤</span>
+                Frank
+              </div>
+            </div>
+            <div class="task-tags">
+              <span class="tag">Finance</span>
+              <span class="tag">Urgent</span>
+            </div>
+            <div class="task-footer">
+              <div style="display: flex; gap: 8px;">
+                <span class="priority-badge priority-high">🔴 Hoog</span>
+                <span class="status-badge status-open">⏳ Open</span>
+              </div>
+              <div class="task-actions">
+                <button class="action-btn complete" title="Voltooien">✓</button>
+                <button class="action-btn edit" title="Wijzigen">✎</button>
+                <button class="action-btn delete" title="Verwijderen">×</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Task Card 2 -->
+          <div class="task-card">
+            <div class="task-card-header">
+              <div class="task-checkbox"></div>
+              <div class="task-id">T-002</div>
+            </div>
+            <div class="task-title">Review contract amendments</div>
+            <div class="task-description">
+              Check legal terms and conditions for new supplier agreement.
+            </div>
+            <div class="task-meta">
+              <div class="meta-item">
+                <span class="meta-icon">📅</span>
+                20 nov
+              </div>
+              <div class="meta-item">
+                <span class="meta-icon">👤</span>
+                Sarah
+              </div>
+            </div>
+            <div class="task-tags">
+              <span class="tag">Legal</span>
+            </div>
+            <div class="task-footer">
+              <div style="display: flex; gap: 8px;">
+                <span class="priority-badge priority-medium">🟡 Normaal</span>
+                <span class="status-badge status-done">✅ Klaar</span>
+              </div>
+              <div class="task-actions">
+                <button class="action-btn edit" title="Wijzigen">✎</button>
+                <button class="action-btn delete" title="Verwijderen">×</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Task Card 3 -->
+          <div class="task-card">
+            <div class="task-card-header">
+              <div class="task-checkbox"></div>
+              <div class="task-id">T-003</div>
+            </div>
+            <div class="task-title">Update company website</div>
+            <div class="task-description">
+              Refresh homepage content and add new case studies to portfolio section.
+            </div>
+            <div class="task-meta">
+              <div class="meta-item">
+                <span class="meta-icon">📅</span>
+                30 nov
+              </div>
+              <div class="meta-item">
+                <span class="meta-icon">👤</span>
+                Niet toegewezen
+              </div>
+            </div>
+            <div class="task-tags">
+              <span class="tag">Marketing</span>
+              <span class="tag">Website</span>
+            </div>
+            <div class="task-footer">
+              <div style="display: flex; gap: 8px;">
+                <span class="priority-badge priority-low">🟢 Laag</span>
+                <span class="status-badge status-new">⭐ Nieuw</span>
+              </div>
+              <div class="task-actions">
+                <button class="action-btn complete" title="Voltooien">✓</button>
+                <button class="action-btn edit" title="Wijzigen">✎</button>
+                <button class="action-btn delete" title="Verwijderen">×</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Task Card 4 -->
+          <div class="task-card">
+            <div class="task-card-header">
+              <div class="task-checkbox"></div>
+              <div class="task-id">T-004</div>
+            </div>
+            <div class="task-title">Schedule team building event</div>
+            <div class="task-description">
+              Organize Q1 team activity and book venue for the entire department.
+            </div>
+            <div class="task-meta">
+              <div class="meta-item">
+                <span class="meta-icon">📅</span>
+                10 dec
+              </div>
+              <div class="meta-item">
+                <span class="meta-icon">👤</span>
+                Frank
+              </div>
+            </div>
+            <div class="task-tags">
+              <span class="tag">HR</span>
+            </div>
+            <div class="task-footer">
+              <div style="display: flex; gap: 8px;">
+                <span class="priority-badge priority-medium">🟡 Normaal</span>
+                <span class="status-badge status-open">⏳ Open</span>
+              </div>
+              <div class="task-actions">
+                <button class="action-btn complete" title="Voltooien">✓</button>
+                <button class="action-btn edit" title="Wijzigen">✎</button>
+                <button class="action-btn delete" title="Verwijderen">×</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Task Card 5 -->
+          <div class="task-card">
+            <div class="task-card-header">
+              <div class="task-checkbox"></div>
+              <div class="task-id">T-005</div>
+            </div>
+            <div class="task-title">Prepare budget proposal</div>
+            <div class="task-description">
+              Create 2025 budget breakdown by department with detailed cost analysis.
+            </div>
+            <div class="task-meta">
+              <div class="meta-item">
+                <span class="meta-icon">📅</span>
+                18 nov
+              </div>
+              <div class="meta-item">
+                <span class="meta-icon">👤</span>
+                Sarah
+              </div>
+            </div>
+            <div class="task-tags">
+              <span class="tag">Finance</span>
+              <span class="tag">Planning</span>
+            </div>
+            <div class="task-footer">
+              <div style="display: flex; gap: 8px;">
+                <span class="priority-badge priority-high">🔴 Hoog</span>
+                <span class="status-badge status-open">⏳ Open</span>
+              </div>
+              <div class="task-actions">
+                <button class="action-btn complete" title="Voltooien">✓</button>
+                <button class="action-btn edit" title="Wijzigen">✎</button>
+                <button class="action-btn delete" title="Verwijderen">×</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Task Card 6 -->
+          <div class="task-card">
+            <div class="task-card-header">
+              <div class="task-checkbox"></div>
+              <div class="task-id">T-006</div>
+            </div>
+            <div class="task-title">Conduct customer interviews</div>
+            <div class="task-description">
+              Interview 5 key customers about product feedback and feature requests.
+            </div>
+            <div class="task-meta">
+              <div class="meta-item">
+                <span class="meta-icon">📅</span>
+                25 nov
+              </div>
+              <div class="meta-item">
+                <span class="meta-icon">👤</span>
+                Niet toegewezen
+              </div>
+            </div>
+            <div class="task-tags">
+              <span class="tag">Research</span>
+            </div>
+            <div class="task-footer">
+              <div style="display: flex; gap: 8px;">
+                <span class="priority-badge priority-medium">🟡 Normaal</span>
+                <span class="status-badge status-new">⭐ Nieuw</span>
+              </div>
+              <div class="task-actions">
+                <button class="action-btn complete" title="Voltooien">✓</button>
+                <button class="action-btn edit" title="Wijzigen">✎</button>
+                <button class="action-btn delete" title="Verwijderen">×</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+</body>
+</html>
