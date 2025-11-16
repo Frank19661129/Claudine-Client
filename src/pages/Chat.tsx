@@ -27,32 +27,13 @@ export const Chat: FC = () => {
 
   const [messageInput, setMessageInput] = useState('');
   const [showCommandHints, setShowCommandHints] = useState(false);
-  const [openTasksCount, setOpenTasksCount] = useState(0);
-  const [notesCount, setNotesCount] = useState(0);
-  const [inboxCount, setInboxCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
 
   // Load conversations on mount
   useEffect(() => {
     loadConversations();
-    loadCounts();
   }, [loadConversations]);
-
-  const loadCounts = async () => {
-    try {
-      const [tasksCount, fetchedNotesCount, fetchedInboxCount] = await Promise.all([
-        api.getOpenTasksCount(),
-        api.getNotesCount(),
-        api.getInboxCount(),
-      ]);
-      setOpenTasksCount(tasksCount);
-      setNotesCount(fetchedNotesCount);
-      setInboxCount(fetchedInboxCount);
-    } catch (err) {
-      console.error('Failed to load counts:', err);
-    }
-  };
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -194,12 +175,7 @@ export const Chat: FC = () => {
   return (
     <div className="h-screen bg-gradient-main flex flex-col">
       {/* Header */}
-      <Header
-        title="Chat"
-        openTasksCount={openTasksCount}
-        notesCount={notesCount}
-        inboxCount={inboxCount}
-      />
+      <Header title="Chat" />
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">

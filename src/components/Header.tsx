@@ -3,24 +3,20 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useChatStore } from '../stores/chatStore';
+import { useCounts } from '../hooks/useCounts';
 
 interface HeaderProps {
   title?: string;
   showBackButton?: boolean;
   actions?: ReactNode;
-  openTasksCount?: number;
-  notesCount?: number;
-  inboxCount?: number;
 }
 
 export const Header: FC<HeaderProps> = ({
   title,
   showBackButton = false,
   actions,
-  openTasksCount = 0,
-  notesCount = 0,
-  inboxCount = 0
 }) => {
+  const { openTasksCount, notesCount, inboxCount } = useCounts();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { cleanupEmptyConversations } = useChatStore();
@@ -98,29 +94,6 @@ export const Header: FC<HeaderProps> = ({
           {/* Menu Icons */}
           <div className="flex items-center gap-2 ml-4">
             <button
-              onClick={() => navigate('/chat')}
-              className="text-lg hover:scale-110 transition-transform"
-              title="Chat"
-              style={{ fontSize: '1.35rem' }}
-            >
-              💬
-            </button>
-
-            <button
-              onClick={() => navigate('/notes')}
-              className="relative text-lg hover:scale-110 transition-transform"
-              title="Notities"
-              style={{ fontSize: '1.35rem' }}
-            >
-              📝
-              {notesCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-navy text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold" style={{ fontSize: '0.65rem' }}>
-                  {notesCount}
-                </span>
-              )}
-            </button>
-
-            <button
               onClick={() => navigate('/inbox')}
               className="relative text-lg hover:scale-110 transition-transform"
               title="Inbox"
@@ -135,6 +108,15 @@ export const Header: FC<HeaderProps> = ({
             </button>
 
             <button
+              onClick={() => navigate('/chat')}
+              className="text-lg hover:scale-110 transition-transform"
+              title="Chat"
+              style={{ fontSize: '1.35rem' }}
+            >
+              💬
+            </button>
+
+            <button
               onClick={() => navigate('/tasks')}
               className="relative text-lg hover:scale-110 transition-transform"
               title="Taken"
@@ -144,6 +126,20 @@ export const Header: FC<HeaderProps> = ({
               {openTasksCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-accent text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold" style={{ fontSize: '0.65rem' }}>
                   {openTasksCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => navigate('/notes')}
+              className="relative text-lg hover:scale-110 transition-transform"
+              title="Notities"
+              style={{ fontSize: '1.35rem' }}
+            >
+              📝
+              {notesCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-navy text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold" style={{ fontSize: '0.65rem' }}>
+                  {notesCount}
                 </span>
               )}
             </button>
