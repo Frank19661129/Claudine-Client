@@ -420,7 +420,6 @@ export const ChatPage: FC = () => {
           </div>
         )}
       </div>
-      </div>
     </div>
   );
 };
