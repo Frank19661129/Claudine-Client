@@ -1,16 +1,25 @@
 import type { FC } from 'react';
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { useChatStore } from '../../stores/chatStore';
 import { Logo } from './Logo';
 
 export const TopBar: FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, logout } = useAuthStore();
   const { cleanupEmptyConversations } = useChatStore();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Test mode indicator from URL param
+  const testMode = useMemo(() => {
+    const flag = searchParams.get('testflag');
+    if (flag === '1') return 1;
+    if (flag === '2') return 2;
+    return 0;
+  }, [searchParams]);
 
   const handleLogout = async () => {
     await cleanupEmptyConversations();
@@ -44,6 +53,27 @@ export const TopBar: FC = () => {
           <Logo />
         </button>
       </div>
+
+      {/* Test Mode Indicator */}
+      {testMode > 0 && (
+        <div
+          style={{
+            backgroundColor: '#22c55e',
+            color: 'white',
+            padding: '4px 12px',
+            borderRadius: '9999px',
+            fontSize: '11px',
+            fontWeight: 'bold',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px'
+          }}
+        >
+          {testMode === 1
+            ? 'TESTMODE=1 GEEN UITVOERING'
+            : 'TESTMODE=2 UITVOERING NA USER CONSENT'}
+        </div>
+      )}
+
       <div className="top-bar-right">
         <div className="relative" ref={dropdownRef}>
           <button

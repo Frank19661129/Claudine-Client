@@ -1,6 +1,6 @@
 import type { FC, ReactNode, ChangeEvent } from 'react';
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { useChatStore } from '../stores/chatStore';
 import { useCounts } from '../hooks/useCounts';
@@ -21,6 +21,7 @@ export const Header: FC<HeaderProps> = ({
 }) => {
   const { openTasksCount, notesCount, inboxCount } = useCounts();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, logout, setUser } = useAuthStore();
   const { cleanupEmptyConversations } = useChatStore();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -29,6 +30,14 @@ export const Header: FC<HeaderProps> = ({
   const [selectedImageUrl, setSelectedImageUrl] = useState<string>('');
   const menuRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Test mode indicator from URL param
+  const testMode = useMemo(() => {
+    const flag = searchParams.get('testflag');
+    if (flag === '1') return 1;
+    if (flag === '2') return 2;
+    return 0;
+  }, [searchParams]);
 
   const handleLogoClick = () => {
     navigate('/chat');
@@ -153,6 +162,23 @@ export const Header: FC<HeaderProps> = ({
 
         {title && (
           <h1 className="ml-4 text-base font-normal text-white">{title}</h1>
+        )}
+
+        {/* Test Mode Indicator */}
+        {testMode > 0 && (
+          <div
+            className="ml-4 px-3 py-1 rounded-full text-xs font-bold"
+            style={{
+              backgroundColor: '#22c55e',
+              color: 'white',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}
+          >
+            {testMode === 1
+              ? 'TESTMODE=1 GEEN UITVOERING'
+              : 'TESTMODE=2 UITVOERING NA USER CONSENT'}
+          </div>
         )}
       </div>
 

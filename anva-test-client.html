@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANVA API Test Client</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="text"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 200px;
+        }
+
+        .url-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .url-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .url-row select {
+            width: 100px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .response-section {
+            margin-top: 30px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .status-bar .status-code {
+            font-weight: 700;
+        }
+
+        .status-bar .status-ok {
+            color: #27ae60;
+        }
+
+        .status-bar .status-error {
+            color: #e74c3c;
+        }
+
+        .response-content {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        #responseFrame {
+            display: none;
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ANVA API Test Client</h1>
+
+        <div class="form-group">
+            <label for="xmlFile">Laad XML bestand (naam bepaalt method: GET-*.xml, POST-*.xml, etc.):</label>
+            <input type="file" id="xmlFile" accept=".xml" onchange="loadXMLFile(event)" style="padding: 8px;">
+        </div>
+
+        <div class="url-row">
+            <div class="form-group">
+                <label for="method">Method</label>
+                <select id="method">
+                    <option value="GET">GET</option>
+                    <option value="POST" selected>POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="url">URL</label>
+                <input type="text" id="url" placeholder="http://10.143.51.132:10980/anva/awacs/absagent" value="http://10.143.51.132:10980/anva/awacs/absagent">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="payload">Payload (XML)</label>
+            <textarea id="payload" placeholder="Voer je XML payload hier in..."></textarea>
+            <div class="checkbox-group">
+                <input type="checkbox" id="urlEncode" checked>
+                <label for="urlEncode" style="margin-bottom: 0;">URL-encode payload en verstuur als ?request= parameter</label>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="sendRequestInIframe()">Verstuur in iFrame</button>
+            <button class="btn-secondary" onclick="openInNewTab()">Open in Nieuw Tabblad</button>
+            <button class="btn-success" onclick="formatPayload()">Format XML</button>
+            <button class="btn-secondary" onclick="clearAll()">Clear All</button>
+        </div>
+
+        <div class="response-section">
+            <label>Response</label>
+            <div class="status-bar" id="statusBar" style="display: none;">
+                <span class="status-code" id="statusCode"></span>
+                <span id="statusTime"></span>
+            </div>
+            <div class="response-content" id="response">Wachten op response...</div>
+            <iframe id="responseFrame"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Format XML string with indentation
+        function formatXML(xml) {
+            let formatted = '';
+            let indent = '';
+            const tab = '  ';
+
+            xml.split(/>\s*</).forEach(node => {
+                if (node.match(/^\/\w/)) {
+                    indent = indent.substring(tab.length);
+                }
+                formatted += indent + '<' + node + '>\n';
+                if (node.match(/^<?\w[^>]*[^\/]$/) && !node.startsWith("?")) {
+                    indent += tab;
+                }
+            });
+
+            return formatted.substring(1, formatted.length - 2);
+        }
+
+        // Format the payload textarea
+        function formatPayload() {
+            const payload = document.getElementById('payload').value.trim();
+            if (!payload) return;
+
+            try {
+                const formatted = formatXML(payload);
+                document.getElementById('payload').value = formatted;
+            } catch (e) {
+                alert('Kon XML niet formatteren: ' + e.message);
+            }
+        }
+
+        // Clear all fields
+        function clearAll() {
+            document.getElementById('payload').value = '';
+            document.getElementById('response').textContent = 'Wachten op response...';
+            document.getElementById('response').style.display = 'block';
+            document.getElementById('statusBar').style.display = 'none';
+            document.getElementById('responseFrame').style.display = 'none';
+            document.getElementById('responseFrame').src = '';
+        }
+
+        // Load XML file from filesystem
+        function loadXMLFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Extract method from filename (e.g., GET-relatie.xml, POST-muteren.xml)
+            const filename = file.name;
+            const methodMatch = filename.match(/^(GET|POST|PUT|DELETE|PATCH)-/i);
+
+            if (methodMatch) {
+                const method = methodMatch[1].toUpperCase();
+                document.getElementById('method').value = method;
+            }
+
+            // Read file content
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                document.getElementById('payload').value = content;
+
+                // Try to format it
+                try {
+                    const formatted = formatXML(content);
+                    document.getElementById('payload').value = formatted;
+                } catch (err) {
+                    console.warn('Could not format XML:', err);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Build full URL with encoded payload
+        function buildFullURL() {
+            const method = document.getElementById('method').value;
+            const url = document.getElementById('url').value.trim();
+            const payload = document.getElementById('payload').value.trim();
+            const urlEncode = document.getElementById('urlEncode').checked;
+
+            if (!url) {
+                alert('Voer een URL in');
+                return null;
+            }
+
+            let fullUrl = url;
+
+            if (urlEncode && payload) {
+                const encoded = encodeURIComponent(payload);
+                fullUrl = url + (url.includes('?') ? '&' : '?') + 'request=' + encoded;
+            }
+
+            return fullUrl;
+        }
+
+        // Send request in iframe (bypasses CORS for GET requests)
+        function sendRequestInIframe() {
+            const fullUrl = buildFullURL();
+            if (!fullUrl) return;
+
+            const iframe = document.getElementById('responseFrame');
+            const responseDiv = document.getElementById('response');
+            const statusBar = document.getElementById('statusBar');
+            const statusCode = document.getElementById('statusCode');
+
+            // Show both response div and iframe
+            responseDiv.style.display = 'block';
+            iframe.style.display = 'block';
+
+            // Show status
+            statusBar.style.display = 'flex';
+            statusCode.textContent = 'Loading...';
+            statusCode.className = 'status-code';
+
+            responseDiv.textContent = 'Loading response...';
+
+            // Load URL in iframe
+            iframe.src = fullUrl;
+
+            // Try to detect load completion
+            iframe.onload = function() {
+                statusCode.textContent = 'Geladen (zie hieronder voor response)';
+                statusCode.className = 'status-code status-ok';
+
+                // Try to read iframe content (will likely fail due to CORS)
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    const xmlContent = iframeDoc.body ? iframeDoc.body.textContent : '';
+
+                    if (xmlContent) {
+                        // Format and display
+                        try {
+                            const formatted = formatXML(xmlContent);
+                            responseDiv.textContent = formatted;
+                        } catch (e) {
+                            responseDiv.textContent = xmlContent;
+                        }
+                    } else {
+                        responseDiv.textContent = 'Response geladen in iframe (kan content niet lezen vanwege CORS)';
+                    }
+                } catch (e) {
+                    // CORS blocked - expected
+                    responseDiv.textContent = 'Response geladen in iframe (kan content niet lezen vanwege CORS - bekijk het iframe hieronder)';
+                }
+            };
+
+            iframe.onerror = function() {
+                statusCode.textContent = 'Error tijdens laden';
+                statusCode.className = 'status-code status-error';
+                responseDiv.textContent = 'Error tijdens laden van response';
+            };
+        }
+
+        // Open request in new tab
+        function openInNewTab() {
+            const fullUrl = buildFullURL();
+            if (fullUrl) {
+                window.open(fullUrl, '_blank');
+            }
+        }
+
+        // Allow Enter key in textareas to insert tab
+        document.getElementById('payload').addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                this.value = this.value.substring(0, start) + '  ' + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + 2;
+            }
+        });
+    </script>
+</body>
+</html>

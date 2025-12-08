@@ -1,15 +1,15 @@
 import type { FC, FormEvent } from 'react';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Message } from '../../types';
 import { useAuthStore } from '../../stores/authStore';
 import { useChatStore } from '../../stores/chatStore';
 import { api } from '../../services/api/client';
-import { MessageContent } from '../../components/chat/MessageContent';
+import { ConfirmExecutionModal } from '../../components/ConfirmExecutionModal';
 
 export const ChatPage: FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const {
     conversations,
     currentConversation,
@@ -23,6 +23,11 @@ export const ChatPage: FC = () => {
     sendMessage,
     deleteConversation,
     clearError,
+    // Confirmation state
+    pendingConfirmation,
+    isConfirming,
+    confirmExecution,
+    cancelConfirmation,
   } = useChatStore();
 
   const [messageInput, setMessageInput] = useState('');
@@ -288,7 +293,7 @@ export const ChatPage: FC = () => {
                         : 'bg-white shadow-card border border-card-border text-navy'
                     }`}
                   >
-                    <MessageContent message={message} isUser={message.role === 'user'} />
+                    <p className="whitespace-pre-wrap">{message.content}</p>
                     <p
                       className={`text-xs mt-2 ${
                         message.role === 'user'
@@ -420,6 +425,18 @@ export const ChatPage: FC = () => {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal for test_mode=2 */}
+      <ConfirmExecutionModal
+        isOpen={!!pendingConfirmation}
+        toolName={pendingConfirmation?.toolName || ''}
+        toolParams={pendingConfirmation?.toolParams || {}}
+        provider={pendingConfirmation?.provider}
+        content={pendingConfirmation?.content || ''}
+        onConfirm={confirmExecution}
+        onCancel={cancelConfirmation}
+        isLoading={isConfirming}
+      />
     </div>
   );
 };

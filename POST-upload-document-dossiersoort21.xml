@@ -1,0 +1,40 @@
+<AWACS>
+  <HEADER>
+    <SERVICE_ID>ABSANVA</SERVICE_ID>
+    <DATASOURCE>19</DATASOURCE>
+    <KEY>1A34216AEA71D4A5FCB3CDB6B2D2B</KEY>
+  </HEADER>
+  <DATA>
+    <REQUEST>
+      <FUNCTION NAME="webmuteren.update">
+        <PARAM NAME="execute"/>
+        <PARAM NAME="view">
+          <RELATIES>
+            <RELATIE>
+              <PK>NAWBES_00012345</PK>
+              <POLISSEN>
+                <POLIS>
+                  <PK>POLBES_123456789</PK>
+                  <DOSSIERS>
+                    <DOSSIER>
+                      <L NR="80001">DOS-2024-001</L>
+                      <L NR="80002">Test document upload dossiersoort 21</L>
+                      <L NR="80003">20240215</L>
+                      <L NR="80004">21</L>
+                      <L NR="80010">JVBERi0xLjQKJeLjz9MKMyAwIG9iago8PC9UeXBlL1BhZ2UvUGFyZW50IDIgMCBSL1Jlc291cmNlczw8L0ZvbnQ8PC9GMSA1IDAgUj4+Pj4vTWVkaWFCb3hbMCAwIDYxMiA3OTJdL0NvbnRlbnRzIDQgMCBSPj4KZW5kb2JqCjQgMCBvYmoKPDwvTGVuZ3RoIDQ0Pj4Kc3RyZWFtCkJUCi9GMSA0OCBUZgoxMDAgNzAwIFRkCihUZXN0IERvY3VtZW50KSBUCMVUKZW5kb2JqCjUgMCBvYmoKPDwvVHlwZS9Gb250L1N1YnR5cGUvVHlwZTEvQmFzZUZvbnQvSGVsdmV0aWNhPj4KZW5kb2JqCjIgMCBvYmoKPDwvVHlwZS9QYWdlcy9Db3VudCAxL0tpZHNbMyAwIFJdPj4KZW5kb2JqCjEgMCBvYmoKPDwvVHlwZS9DYXRhbG9nL1BhZ2VzIDIgMCBSPj4KZW5kb2JqCjYgMCBvYmoKPDwvUHJvZHVjZXIoaVRleHQgMi4xLjcgXCh3d3cubG93YWdpZS5jb21cKSk+PgplbmRvYmoKeHJlZgowIDcKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwNDA5IDAwMDAwIG4gCjAwMDAwMDAzNTcgMDAwMDAgbiAKMDAwMDAwMDAxNSAwMDAwMCBuIAowMDAwMDAwMTI1IDAwMDAwIG4gCjAwMDAwMDAyMTcgMDAwMDAgbiAKMDAwMDAwMDQ1OCAwMDAwMCBuIAp0cmFpbGVyCjw8L1NpemUgNy9Sb290IDEgMCBSL0luZm8gNiAwIFI+PgpzdGFydHhyZWYKNTIzCiUlRU9GCg==</L>
+                      <L NR="80011">testdocument.pdf</L>
+                      <UPDATE>
+                        <CODES CONTROLEREN="Systeem"/>
+                        <VERPLICHTE_VELDEN CONTROLEREN="Systeem"/>
+                      </UPDATE>
+                    </DOSSIER>
+                  </DOSSIERS>
+                </POLIS>
+              </POLISSEN>
+            </RELATIE>
+          </RELATIES>
+        </PARAM>
+      </FUNCTION>
+    </REQUEST>
+  </DATA>
+</AWACS>

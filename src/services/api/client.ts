@@ -16,12 +16,20 @@ class ApiClient {
       // withCredentials not needed - we use JWT tokens in Authorization header
     });
 
-    // Request interceptor: add auth token
+    // Request interceptor: add auth token and test mode header
     this.client.interceptors.request.use((config) => {
       const token = localStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+
+      // Add test mode header from URL query param
+      const params = new URLSearchParams(window.location.search);
+      const testFlag = params.get('testflag');
+      if (testFlag === '1' || testFlag === '2') {
+        config.headers['X-Test-Mode'] = testFlag;
+      }
+
       return config;
     });
 
@@ -126,16 +134,28 @@ class ApiClient {
     throw new Error('Use SSE service for streaming');
   }
 
-  // Calendar OAuth endpoints
+  // Calendar OAuth endpoints - via API layer
   async startMicrosoftOAuth() {
     const { data } = await this.client.post('/calendar/oauth/microsoft/start');
+    console.log('Microsoft OAuth response:', data);
     return data;
   }
 
   async pollMicrosoftOAuth(deviceCode: string) {
     const { data } = await this.client.post('/calendar/oauth/microsoft/poll', {
-      device_code: deviceCode,
-      set_as_primary: true,
+      device_code: deviceCode
+    });
+    return data;
+  }
+
+  async startGoogleOAuth() {
+    const { data } = await this.client.post('/calendar/oauth/google/start');
+    return data;
+  }
+
+  async pollGoogleOAuth(deviceCode: string) {
+    const { data } = await this.client.post('/calendar/oauth/google/poll', {
+      device_code: deviceCode
     });
     return data;
   }
@@ -147,6 +167,11 @@ class ApiClient {
 
   async disconnectCalendar(provider: string) {
     const { data} = await this.client.delete(`/calendar/oauth/${provider}`);
+    return data;
+  }
+
+  async setPrimaryCalendar(provider: string) {
+    const { data } = await this.client.post(`/calendar/oauth/${provider}/primary`);
     return data;
   }
 
@@ -262,6 +287,90 @@ class ApiClient {
   async getInboxCount() {
     const { data } = await this.client.get('/inbox/count');
     return data.count || 0;
+  }
+
+  // ==================== MCP Endpoints ====================
+
+  /**
+   * Execute an MCP tool with test mode support.
+   *
+   * @param toolName - Name of the tool (e.g., "create_calendar_event")
+   * @param toolParams - Parameters for the tool
+   * @param options - Additional options
+   * @returns MCP execution result with optional route trace
+   */
+  async executeMCPTool(
+    toolName: string,
+    toolParams: Record<string, unknown>,
+    options: {
+      provider?: string;
+      inputSource?: 'command' | 'chat' | 'voice' | 'api';
+      originalInput?: string;
+      testMode?: 0 | 1 | 2;
+    } = {}
+  ) {
+    const { data } = await this.client.post('/mcp/execute', {
+      tool_name: toolName,
+      tool_params: toolParams,
+      provider: options.provider,
+      input_source: options.inputSource || 'api',
+      original_input: options.originalInput,
+      test_mode: options.testMode || 0,
+    });
+    return data;
+  }
+
+  /**
+   * Confirm a pending MCP execution (for test_mode=2).
+   */
+  async confirmMCPExecution(
+    toolName: string,
+    toolParams: Record<string, unknown>,
+    provider?: string
+  ) {
+    const { data } = await this.client.post('/mcp/confirm', {
+      tool_name: toolName,
+      tool_params: toolParams,
+      provider,
+    });
+    return data;
+  }
+
+  /**
+   * Detect intent from user input.
+   */
+  async detectIntent(userInput: string) {
+    const { data } = await this.client.post('/mcp/detect-intent', {
+      user_input: userInput,
+    });
+    return data;
+  }
+
+  /**
+   * Get available MCP tools.
+   */
+  async getMCPTools(provider?: string) {
+    const { data } = await this.client.get('/mcp/tools', {
+      params: { provider },
+    });
+    return data;
+  }
+
+  /**
+   * Check MCP server health.
+   */
+  async getMCPHealth() {
+    const { data } = await this.client.get('/mcp/health');
+    return data;
+  }
+
+  /**
+   * Sync OAuth tokens to token-service.
+   * This is a one-time sync for tokens stored before token-service integration.
+   */
+  async syncOAuthTokens() {
+    const { data } = await this.client.post('/calendar/oauth/sync-tokens');
+    return data;
   }
 }
 

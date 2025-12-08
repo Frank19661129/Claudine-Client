@@ -26,8 +26,11 @@ export const NotesPage: FC = () => {
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
 
   useEffect(() => {
-    loadNotes();
-  }, []);
+    // Only load data when we have a valid token
+    if (token) {
+      loadNotes();
+    }
+  }, [token]);
 
   // Apply filters
   useEffect(() => {

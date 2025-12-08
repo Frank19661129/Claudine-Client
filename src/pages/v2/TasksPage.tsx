@@ -53,9 +53,12 @@ export const TasksPage: FC = () => {
   });
 
   useEffect(() => {
-    loadTasks();
-    loadCounts();
-  }, []);
+    // Only load data when we have a valid token
+    if (token) {
+      loadTasks();
+      loadCounts();
+    }
+  }, [token]);
 
   const loadCounts = async () => {
     try {

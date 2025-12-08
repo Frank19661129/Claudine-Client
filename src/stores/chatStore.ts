@@ -2,6 +2,11 @@ import { create } from 'zustand';
 import type { Conversation, ConversationDetail, Message } from '../types';
 import { api } from '../services/api/client';
 import { streamingService } from '../services/sse/streaming';
+import type { ConfirmData } from '../services/sse/streaming';
+
+interface PendingConfirmation extends ConfirmData {
+  conversationId: string;
+}
 
 interface ChatState {
   conversations: Conversation[];
@@ -10,6 +15,10 @@ interface ChatState {
   isStreaming: boolean;
   streamingContent: string;
   error: string | null;
+
+  // Confirmation state for test_mode=2
+  pendingConfirmation: PendingConfirmation | null;
+  isConfirming: boolean;
 
   // Actions
   loadConversations: (mode?: string) => Promise<void>;
@@ -20,6 +29,10 @@ interface ChatState {
   clearError: () => void;
   setCurrentConversation: (conversation: ConversationDetail | null) => void;
   cleanupEmptyConversations: () => Promise<void>;
+
+  // Confirmation actions
+  confirmExecution: () => Promise<void>;
+  cancelConfirmation: () => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -29,6 +42,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   isStreaming: false,
   streamingContent: '',
   error: null,
+  pendingConfirmation: null,
+  isConfirming: false,
 
   loadConversations: async (mode?: string) => {
     set({ isLoading: true, error: null });
@@ -110,6 +125,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
             set((state) => ({
               streamingContent: state.streamingContent + chunk,
             }));
+          },
+          onConfirmRequired: (data: ConfirmData) => {
+            // Test mode 2: show confirmation popup
+            set({
+              pendingConfirmation: {
+                ...data,
+                conversationId,
+              },
+              streamingContent: data.content, // Show the route trace in chat
+              isStreaming: false,
+            });
           },
           onComplete: (message: Message) => {
             const { currentConversation, streamingContent } = get();
@@ -209,5 +235,58 @@ export const useChatStore = create<ChatState>((set, get) => ({
         console.error('Failed to cleanup empty conversation:', error);
       }
     }
+  },
+
+  // Confirm execution for test_mode=2
+  confirmExecution: async () => {
+    const { pendingConfirmation, currentConversation } = get();
+    if (!pendingConfirmation) return;
+
+    set({ isConfirming: true });
+
+    try {
+      // Call the MCP confirm endpoint
+      const result = await api.confirmMCPExecution(
+        pendingConfirmation.toolName,
+        pendingConfirmation.toolParams,
+        pendingConfirmation.provider || undefined
+      );
+
+      // Update chat with result
+      if (currentConversation) {
+        const resultMessage: Message = {
+          id: `msg-${Date.now()}`,
+          conversation_id: currentConversation.id,
+          role: 'assistant',
+          content: result.success
+            ? `✅ Actie uitgevoerd!\n\n${JSON.stringify(result.data, null, 2)}`
+            : `❌ Fout bij uitvoeren: ${result.error}`,
+          created_at: new Date().toISOString(),
+        };
+
+        set({
+          currentConversation: {
+            ...currentConversation,
+            messages: [...currentConversation.messages, resultMessage],
+          },
+          pendingConfirmation: null,
+          isConfirming: false,
+          streamingContent: '',
+        });
+      }
+    } catch (error: any) {
+      set({
+        error: error.message || 'Failed to execute action',
+        isConfirming: false,
+      });
+    }
+  },
+
+  // Cancel confirmation popup
+  cancelConfirmation: () => {
+    set({
+      pendingConfirmation: null,
+      streamingContent: '',
+    });
   },
 }));

@@ -1,14 +1,19 @@
 import type { FC } from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../services/api/client';
+import { Header } from '../../components/Header';
 
 export const SettingsPage: FC = () => {
   const [connectedCalendars, setConnectedCalendars] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [codeCopied, setCodeCopied] = useState(false);
+  const [openTasksCount, setOpenTasksCount] = useState(0);
+  const [notesCount, setNotesCount] = useState(0);
 
   // OAuth device code flow state
   const [showOAuthFlow, setShowOAuthFlow] = useState(false);
+  const [oauthProvider, setOauthProvider] = useState<'microsoft' | 'google' | null>(null);
   const [userCode, setUserCode] = useState('');
   const [verificationUrl, setVerificationUrl] = useState('');
   const [polling, setPolling] = useState(false);
@@ -21,7 +26,21 @@ export const SettingsPage: FC = () => {
   useEffect(() => {
     loadConnectedCalendars();
     requestLocation();
+    loadCounts();
   }, []);
+
+  const loadCounts = async () => {
+    try {
+      const [tasksCount, fetchedNotesCount] = await Promise.all([
+        api.getOpenTasksCount(),
+        api.getNotesCount(),
+      ]);
+      setOpenTasksCount(tasksCount);
+      setNotesCount(fetchedNotesCount);
+    } catch (err) {
+      console.error('Failed to load counts:', err);
+    }
+  };
 
   const requestLocation = useCallback(async () => {
     setLocationLoading(true);
@@ -87,23 +106,39 @@ export const SettingsPage: FC = () => {
   const loadConnectedCalendars = async () => {
     try {
       const calendars = await api.getConnectedCalendars();
+      console.log('Loaded connected calendars:', calendars);
       setConnectedCalendars(calendars);
     } catch (err: any) {
       console.error('Failed to load calendars:', err);
     }
   };
 
-  const startMicrosoftOAuth = async () => {
+  const startOAuth = async (provider: 'microsoft' | 'google') => {
     setLoading(true);
     setError('');
     try {
-      const response = await api.startMicrosoftOAuth();
+      const response = provider === 'microsoft'
+        ? await api.startMicrosoftOAuth()
+        : await api.startGoogleOAuth();
+
+      console.log('v2 Settings: OAuth response:', response);
+
+      // Backend returns data directly, not wrapped in {success: true, ...}
+      // Check for required fields instead
+      if (!response.user_code || !response.device_code) {
+        setError(response.error || 'Failed to start OAuth - missing required fields');
+        return;
+      }
+
       setUserCode(response.user_code);
-      setVerificationUrl(response.verification_url);
+      // Backend returns 'verification_url', not 'verification_uri'
+      setVerificationUrl(response.verification_url || response.verification_uri);
+      setOauthProvider(provider);
       setShowOAuthFlow(true);
+      setCodeCopied(false);
 
       // Start polling
-      startPolling(response.device_code);
+      startPolling(response.device_code, provider);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to start OAuth');
     } finally {
@@ -111,7 +146,7 @@ export const SettingsPage: FC = () => {
     }
   };
 
-  const startPolling = async (code: string) => {
+  const startPolling = async (code: string, provider: 'microsoft' | 'google') => {
     setPolling(true);
     const maxAttempts = 60; // 5 minutes with 5 second intervals
     let attempts = 0;
@@ -120,29 +155,43 @@ export const SettingsPage: FC = () => {
       if (attempts >= maxAttempts) {
         setError('OAuth timeout - please try again');
         setPolling(false);
+        setShowOAuthFlow(false);
         return;
       }
 
       try {
-        const response = await api.pollMicrosoftOAuth(code);
-        if (response.success) {
+        const response = provider === 'microsoft'
+          ? await api.pollMicrosoftOAuth(code)
+          : await api.pollGoogleOAuth(code);
+
+        console.log(`Polling attempt ${attempts + 1}:`, response);
+
+        // Backend returns: {success: true/false, pending: true/false, expires_at: timestamp}
+        if (response.success && !response.pending) {
+          // Successfully authenticated!
           setShowOAuthFlow(false);
           setPolling(false);
+          setOauthProvider(null);
           await loadConnectedCalendars();
-          alert('Calendar connected successfully!');
-        } else if (response.pending) {
+          alert(`${provider === 'microsoft' ? 'Microsoft' : 'Google'} Calendar connected successfully!`);
+        } else if (response.pending || response.error === 'authorization_pending') {
+          // Still waiting for user to authorize
           attempts++;
           setTimeout(poll, 5000); // Poll every 5 seconds
-        }
-      } catch (err: any) {
-        if (err.response?.status === 428) {
-          // Still pending
+        } else if (response.error) {
+          // Error occurred
+          setError(response.message || response.error);
+          setPolling(false);
+          setShowOAuthFlow(false);
+        } else {
+          // Unknown response, keep polling
           attempts++;
           setTimeout(poll, 5000);
-        } else {
-          setError(err.response?.data?.detail || 'OAuth failed');
-          setPolling(false);
         }
+      } catch (err: any) {
+        setError(err.message || 'OAuth failed');
+        setPolling(false);
+        setShowOAuthFlow(false);
       }
     };
 
@@ -160,12 +209,54 @@ export const SettingsPage: FC = () => {
     }
   };
 
-  return (
-    <div className="content-body p-8 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-light text-navy mb-6">Instellingen</h1>
+  const setPrimaryProvider = async (provider: string) => {
+    try {
+      await api.setPrimaryCalendar(provider);
+      await loadConnectedCalendars();
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to set primary provider');
+    }
+  };
 
-      {/* Calendar Section */}
-      <div className="bg-white rounded-card shadow-card p-6 mb-6">
+  const copyCodeToClipboard = async () => {
+    try {
+      // Try modern clipboard API first
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(userCode);
+      } else {
+        // Fallback for HTTP or older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = userCode;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy code:', err);
+      alert('Code: ' + userCode);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-main">
+      {/* Header */}
+      <Header
+        title="Settings"
+        showBackButton={true}
+        openTasksCount={openTasksCount}
+        notesCount={notesCount}
+      />
+
+      {/* Content */}
+      <div className="max-w-4xl mx-auto p-6">
+
+        {/* Calendar Section */}
+        <div className="bg-gradient-card rounded-card shadow-card p-6 mb-6">
         <h2 className="text-xl font-light text-navy mb-4 tracking-wide">
           Calendar Integration
         </h2>
@@ -187,19 +278,35 @@ export const SettingsPage: FC = () => {
                 key={cal.provider}
                 className="flex items-center justify-between p-4 bg-background rounded-input mb-2"
               >
-                <div>
-                  <p className="font-medium text-navy">{cal.provider}</p>
-                  <p className="text-xs text-text-muted">
-                    {cal.is_primary && '(Primary) '}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-navy capitalize">{cal.provider}</p>
+                    {cal.is_primary && (
+                      <span className="text-xs bg-accent text-white px-2 py-1 rounded">
+                        Primary
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-text-muted mt-1">
                     Connected {new Date(cal.connected_at).toLocaleDateString()}
                   </p>
                 </div>
-                <button
-                  onClick={() => disconnectCalendar(cal.provider)}
-                  className="text-sm text-accent hover:text-accent-dark"
-                >
-                  Disconnect
-                </button>
+                <div className="flex gap-2">
+                  {!cal.is_primary && (
+                    <button
+                      onClick={() => setPrimaryProvider(cal.provider)}
+                      className="text-sm text-navy hover:text-accent px-3 py-1 border border-navy hover:border-accent rounded transition-all"
+                    >
+                      Set as Primary
+                    </button>
+                  )}
+                  <button
+                    onClick={() => disconnectCalendar(cal.provider)}
+                    className="text-sm text-red-600 hover:text-red-800"
+                  >
+                    Disconnect
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -207,17 +314,26 @@ export const SettingsPage: FC = () => {
 
         {/* OAuth Flow */}
         {!showOAuthFlow ? (
-          <button
-            onClick={startMicrosoftOAuth}
-            disabled={loading}
-            className="w-full bg-gradient-navy text-white py-3 rounded-button hover:shadow-button transition-all disabled:opacity-50"
-          >
-            {loading ? 'Connecting...' : '+ Connect Microsoft 365 Calendar'}
-          </button>
+          <div className="space-y-3">
+            <button
+              onClick={() => startOAuth('microsoft')}
+              disabled={loading || showOAuthFlow}
+              className="w-full bg-gradient-navy text-white py-3 rounded-button hover:shadow-button transition-all disabled:opacity-50"
+            >
+              {loading && oauthProvider === 'microsoft' ? 'Connecting...' : '+ Connect Microsoft 365 Calendar'}
+            </button>
+            <button
+              onClick={() => startOAuth('google')}
+              disabled={loading || showOAuthFlow}
+              className="w-full bg-accent text-white py-3 rounded-button hover:shadow-button transition-all disabled:opacity-50"
+            >
+              {loading && oauthProvider === 'google' ? 'Connecting...' : '+ Connect Google Calendar'}
+            </button>
+          </div>
         ) : (
           <div className="p-6 bg-accent/10 rounded-card border-2 border-accent/20">
             <h3 className="text-lg font-medium text-navy mb-4">
-              Connect Your Microsoft Account
+              Connect Your {oauthProvider === 'microsoft' ? 'Microsoft' : 'Google'} Account
             </h3>
 
             <div className="space-y-4">
@@ -229,7 +345,7 @@ export const SettingsPage: FC = () => {
                   href={verificationUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block p-3 bg-white rounded-input text-accent hover:text-accent-dark font-mono text-sm"
+                  className="block p-3 bg-white rounded-input text-accent hover:text-accent-dark font-mono text-sm break-all"
                 >
                   {verificationUrl}
                 </a>
@@ -240,9 +356,15 @@ export const SettingsPage: FC = () => {
                   2. Enter this code:
                 </p>
                 <div className="p-4 bg-white rounded-input">
-                  <p className="text-3xl font-bold text-navy tracking-widest text-center">
+                  <p className="text-3xl font-bold text-navy tracking-widest text-center mb-3">
                     {userCode}
                   </p>
+                  <button
+                    onClick={copyCodeToClipboard}
+                    className="w-full bg-accent text-white py-2 rounded-button hover:bg-accent-dark transition-all"
+                  >
+                    {codeCopied ? '✓ Gekopieerd!' : 'Kopieer code'}
+                  </button>
                 </div>
               </div>
 
@@ -259,8 +381,8 @@ export const SettingsPage: FC = () => {
         )}
       </div>
 
-      {/* Location Section */}
-      <div className="bg-white rounded-card shadow-card p-6 mb-6">
+        {/* Location Section */}
+        <div className="bg-gradient-card rounded-card shadow-card p-6 mb-6">
         <h2 className="text-xl font-light text-navy mb-4 tracking-wide">
           Location
         </h2>
@@ -310,11 +432,12 @@ export const SettingsPage: FC = () => {
         )}
       </div>
 
-      {/* Copyright Section */}
-      <div className="text-center">
-        <p className="text-sm text-text-muted font-light tracking-wide">
-          Claudine © is bedacht, gemaakt en wordt onderhouden door GS.ai BV.
-        </p>
+        {/* Copyright Section */}
+        <div className="mt-8 text-center">
+          <p className="text-sm text-text-muted font-light tracking-wide">
+            Claudine © is bedacht, gemaakt en wordt onderhouden door GS.ai BV.
+          </p>
+        </div>
       </div>
     </div>
   );

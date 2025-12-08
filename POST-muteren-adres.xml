@@ -1,0 +1,29 @@
+<AWACS>
+  <HEADER>
+    <SERVICE_ID>ABSANVA</SERVICE_ID>
+    <DATASOURCE>19</DATASOURCE>
+    <KEY>1A34216AEA71D4A5FCB3CDB6B2D2B</KEY>
+  </HEADER>
+  <DATA>
+    <REQUEST>
+      <FUNCTION NAME="webmuteren.update">
+        <PARAM NAME="execute"/>
+        <PARAM NAME="view">
+          <RELATIES>
+            <RELATIE>
+              <PK>NAWBES_00012345</PK>
+              <L NR="7">Nieuwe straat</L>
+              <L NR="8">25</L>
+              <L NR="11">5678CD</L>
+              <L NR="12">Rotterdam</L>
+              <UPDATE>
+                <VERPLICHTE_VELDEN CONTROLEREN="Nee"/>
+                <SLOTACTIES UITVOEREN="Nee"/>
+              </UPDATE>
+            </RELATIE>
+          </RELATIES>
+        </PARAM>
+      </FUNCTION>
+    </REQUEST>
+  </DATA>
+</AWACS>

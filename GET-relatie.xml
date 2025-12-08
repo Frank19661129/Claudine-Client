@@ -1,0 +1,25 @@
+<AWACS>
+  <HEADER>
+    <SERVICE_ID>ABSANVA</SERVICE_ID>
+    <DATASOURCE>19</DATASOURCE>
+    <KEY>1A34216AEA71D4A5FCB3CDB6B2D2B</KEY>
+  </HEADER>
+  <DATA>
+    <REQUEST>
+      <FUNCTION NAME="webview.select">
+        <PARAM NAME="execute" />
+        <PARAM NAME="select">
+          <RELATIES>
+            <RELATIE>
+              <PK/>
+              <L NR="*"/>
+            </RELATIE>
+            <WHERE>
+              <L NR="1" EQ="60291103"/>
+            </WHERE>
+          </RELATIES>
+        </PARAM>
+      </FUNCTION>
+    </REQUEST>
+  </DATA>
+</AWACS>

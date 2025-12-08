@@ -2,14 +2,33 @@ import type { Message } from '../../types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8003/api/v1';
 
+export interface ConfirmData {
+  toolName: string;
+  toolParams: Record<string, unknown>;
+  provider?: string | null;
+  content: string;
+}
+
 export interface StreamCallbacks {
   onMessage: (content: string) => void;
   onComplete: (message: Message) => void;
   onError: (error: Error) => void;
+  onConfirmRequired?: (data: ConfirmData) => void;
 }
 
 export class StreamingService {
   private eventSource: EventSource | null = null;
+
+  /**
+   * Get test_mode from URL query params
+   */
+  private getTestMode(): number {
+    const params = new URLSearchParams(window.location.search);
+    const flag = params.get('testflag');
+    if (flag === '1') return 1;
+    if (flag === '2') return 2;
+    return 0;
+  }
 
   /**
    * Create a streaming connection for AI responses
@@ -27,16 +46,25 @@ export class StreamingService {
       return;
     }
 
+    // Get test_mode from URL
+    const testMode = this.getTestMode();
+
+    // Build headers with test mode
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    };
+    if (testMode > 0) {
+      headers['X-Test-Mode'] = String(testMode);
+    }
+
     // First, send the message via POST
     try {
       const response = await fetch(
         `${API_URL}/conversations/${conversationId}/messages/stream`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
+          headers,
           body: JSON.stringify({ content }),
         }
       );
@@ -89,6 +117,19 @@ export class StreamingService {
 
               if (parsed.type === 'content') {
                 callbacks.onMessage(parsed.content);
+              } else if (parsed.type === 'confirm_required') {
+                // Test mode 2: confirmation required
+                if (callbacks.onConfirmRequired) {
+                  callbacks.onConfirmRequired({
+                    toolName: parsed.tool_name,
+                    toolParams: parsed.tool_params,
+                    provider: parsed.provider,
+                    content: parsed.content,
+                  });
+                } else {
+                  // Fallback: just show the content
+                  callbacks.onMessage(parsed.content);
+                }
               } else if (parsed.type === 'done') {
                 callbacks.onComplete(parsed.message);
               } else if (parsed.type === 'error') {

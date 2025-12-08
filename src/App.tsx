@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore';
 import { MainLayout } from './layouts/MainLayout';
+import { TestModeProvider } from './contexts/TestModeContext';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Chat } from './pages/Chat';
@@ -43,6 +44,7 @@ const App: FC = () => {
 
   return (
     <BrowserRouter>
+      <TestModeProvider>
       <Routes>
         {/* Public routes */}
         <Route path="/test" element={<TestPage />} />
@@ -151,6 +153,7 @@ const App: FC = () => {
         {/* 404 catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </TestModeProvider>
     </BrowserRouter>
   );
 };
