@@ -106,7 +106,6 @@ export const SettingsPage: FC = () => {
   const loadConnectedCalendars = async () => {
     try {
       const calendars = await api.getConnectedCalendars();
-      console.log('Loaded connected calendars:', calendars);
       setConnectedCalendars(calendars);
     } catch (err: any) {
       console.error('Failed to load calendars:', err);
