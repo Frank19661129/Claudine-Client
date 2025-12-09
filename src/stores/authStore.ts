@@ -32,6 +32,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       // Store in localStorage
       localStorage.setItem('token', response.access_token);
+      localStorage.setItem('refresh_token', response.refresh_token);
       localStorage.setItem('user', JSON.stringify(response.user));
 
       set({
@@ -59,6 +60,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       // Store in localStorage
       localStorage.setItem('token', response.access_token);
+      localStorage.setItem('refresh_token', response.refresh_token);
       localStorage.setItem('user', JSON.stringify(response.user));
 
       set({
@@ -81,6 +83,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
     set({
       user: null,
@@ -116,6 +119,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (error) {
       // Token is invalid, clear everything
       localStorage.removeItem('token');
+      localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
       set({
         user: null,
