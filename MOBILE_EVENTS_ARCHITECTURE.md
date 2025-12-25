@@ -1,5 +1,5 @@
 # Mobile Events & Notifications Architecture
-## Claudine Mobile - iOS & Android
+## Pepper Mobile - iOS & Android
 
 **Versie:** 1.0
 **Datum:** 2025-11-15
@@ -9,7 +9,7 @@
 
 ## 📱 Overview
 
-Deze architectuur beschrijft hoe Claudine Mobile omgaat met:
+Deze architectuur beschrijft hoe Pepper Mobile omgaat met:
 - System events (app lifecycle, network, battery, etc.)
 - Push notifications (remote via server)
 - Local notifications (timers, reminders, taken)
@@ -204,7 +204,7 @@ export class SystemEventService {
   private handleDeepLink(url: string) {
     console.log('🔗 Deep link opened:', url);
 
-    // Parse URL: claudine://chat/conversation/123
+    // Parse URL: pepper://chat/conversation/123
     // Navigate to appropriate screen
     // Handle custom actions
   }
@@ -343,7 +343,7 @@ export class PushNotificationService {
     // Dispatch to store
     notificationStore.getState().addNotification({
       id: Date.now().toString(),
-      title: title || 'Claudine',
+      title: title || 'Pepper',
       body: body || '',
       data: data,
       timestamp: new Date().toISOString(),
@@ -915,7 +915,7 @@ export interface PushNotificationPayload {
 // Server sends push when new message arrives
 await PushService.send_notification(
   user_id="user-123",
-  title="Nieuwe bericht van Claudine",
+  title="Nieuwe bericht van Pepper",
   body="Je vraag is beantwoord!",
   data={
     "type": "chat",
