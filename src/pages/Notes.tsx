@@ -215,7 +215,7 @@ export const Notes: FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-main">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <Header
         title="Notities"

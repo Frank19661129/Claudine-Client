@@ -267,7 +267,6 @@ export const Header: FC<HeaderProps> = ({
                   {user?.full_name ? user.full_name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase() || 'U'}
                 </div>
               )}
-              <span className="text-white text-sm hidden md:inline">{user?.full_name || 'User'}</span>
               <span className="text-white/60">▾</span>
             </button>
 

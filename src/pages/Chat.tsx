@@ -173,7 +173,7 @@ export const Chat: FC = () => {
   }
 
   return (
-    <div className="h-screen bg-gradient-main flex flex-col">
+    <div className="h-screen bg-white flex flex-col">
       {/* Header */}
       <Header title="Chat" />
 
@@ -183,8 +183,8 @@ export const Chat: FC = () => {
         <div className="w-80 bg-white border-r border-card-border flex flex-col">
           {/* Sidebar Header */}
           <div className="bg-white border-b border-card-border p-4">
-            <p className="text-sm text-text-secondary">
-              {user?.full_name || user?.email}
+            <p className="text-sm font-medium text-navy">
+              Gesprekken
             </p>
           </div>
 
@@ -280,7 +280,7 @@ export const Chat: FC = () => {
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Ctext x='60' y='90' font-family='Arial, sans-serif' font-size='32' fill='%231a365d' opacity='0.08' font-weight='300' letter-spacing='3'%3EGS.ai%3C/text%3E%3Ctext x='450' y='150' font-family='Arial, sans-serif' font-size='26' fill='%231a365d' opacity='0.08' font-weight='300' letter-spacing='2'%3EClaudine Assistent%3C/text%3E%3Ctext x='200' y='280' font-family='Arial, sans-serif' font-size='30' fill='%231a365d' opacity='0.07' font-weight='300' letter-spacing='3'%3EGS.ai%3C/text%3E%3Ctext x='520' y='400' font-family='Arial, sans-serif' font-size='28' fill='%231a365d' opacity='0.07' font-weight='300' letter-spacing='2'%3EClaudine Assistent%3C/text%3E%3Ctext x='100' y='500' font-family='Arial, sans-serif' font-size='32' fill='%231a365d' opacity='0.08' font-weight='300' letter-spacing='3'%3EGS.ai%3C/text%3E%3Ctext x='350' y='550' font-family='Arial, sans-serif' font-size='24' fill='%231a365d' opacity='0.07' font-weight='300' letter-spacing='2'%3EClaudine Assistent%3C/text%3E%3C/svg%3E")`,
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Ctext x='60' y='90' font-family='Arial, sans-serif' font-size='32' fill='%231a365d' opacity='0.08' font-weight='300' letter-spacing='3'%3EFranklab%3C/text%3E%3Ctext x='450' y='150' font-family='Arial, sans-serif' font-size='26' fill='%231a365d' opacity='0.08' font-weight='300' letter-spacing='2'%3EPepper Assistent%3C/text%3E%3Ctext x='200' y='280' font-family='Arial, sans-serif' font-size='30' fill='%231a365d' opacity='0.07' font-weight='300' letter-spacing='3'%3EFranklab%3C/text%3E%3Ctext x='520' y='400' font-family='Arial, sans-serif' font-size='28' fill='%231a365d' opacity='0.07' font-weight='300' letter-spacing='2'%3EPepper Assistent%3C/text%3E%3Ctext x='100' y='500' font-family='Arial, sans-serif' font-size='32' fill='%231a365d' opacity='0.08' font-weight='300' letter-spacing='3'%3EFranklab%3C/text%3E%3Ctext x='350' y='550' font-family='Arial, sans-serif' font-size='24' fill='%231a365d' opacity='0.07' font-weight='300' letter-spacing='2'%3EPepper Assistent%3C/text%3E%3C/svg%3E")`,
                   backgroundRepeat: 'repeat',
                   backgroundSize: '800px 600px',
                   backgroundPosition: '0 0'
@@ -389,7 +389,7 @@ export const Chat: FC = () => {
           <div
             className="flex-1 flex items-center justify-center relative overflow-hidden"
             style={{
-              backgroundImage: 'url(/claudine-bg.jpg)',
+              backgroundImage: 'url(/pepper-bg.jpg)',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               backgroundColor: '#1a365d', // Fallback if image not loaded
@@ -400,9 +400,9 @@ export const Chat: FC = () => {
 
             {/* Content */}
             <div className="relative z-10 text-center max-w-2xl px-8">
-              {/* CLAUDINE Title */}
+              {/* PEPPER Title */}
               <h1 className="text-7xl font-light text-white tracking-widest mb-4 drop-shadow-lg">
-                CLAUDINE
+                PEPPER
               </h1>
 
               {/* Payoff with real smiley */}

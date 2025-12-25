@@ -6,6 +6,8 @@ import { MainLayout } from './layouts/MainLayout';
 import { TestModeProvider } from './contexts/TestModeContext';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { Onboarding } from './pages/Onboarding';
+import { VerifyInbox } from './pages/VerifyInbox';
 import { Chat } from './pages/Chat';
 import { Settings } from './pages/Settings';
 import { Monitor } from './pages/Monitor';
@@ -56,6 +58,14 @@ const App: FC = () => {
         <Route
           path="/register"
           element={!isAuthenticated ? <Register /> : <Navigate to="/chat" replace />}
+        />
+        <Route
+          path="/onboarding"
+          element={isAuthenticated ? <Onboarding /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/verify-inbox"
+          element={<VerifyInbox />}
         />
 
         {/* Main Routes - V2 Silver Cloud Design (Default) */}

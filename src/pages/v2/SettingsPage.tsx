@@ -1,15 +1,12 @@
 import type { FC } from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../services/api/client';
-import { Header } from '../../components/Header';
 
 export const SettingsPage: FC = () => {
   const [connectedCalendars, setConnectedCalendars] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [codeCopied, setCodeCopied] = useState(false);
-  const [openTasksCount, setOpenTasksCount] = useState(0);
-  const [notesCount, setNotesCount] = useState(0);
 
   // OAuth device code flow state
   const [showOAuthFlow, setShowOAuthFlow] = useState(false);
@@ -26,21 +23,7 @@ export const SettingsPage: FC = () => {
   useEffect(() => {
     loadConnectedCalendars();
     requestLocation();
-    loadCounts();
   }, []);
-
-  const loadCounts = async () => {
-    try {
-      const [tasksCount, fetchedNotesCount] = await Promise.all([
-        api.getOpenTasksCount(),
-        api.getNotesCount(),
-      ]);
-      setOpenTasksCount(tasksCount);
-      setNotesCount(fetchedNotesCount);
-    } catch (err) {
-      console.error('Failed to load counts:', err);
-    }
-  };
 
   const requestLocation = useCallback(async () => {
     setLocationLoading(true);
@@ -60,7 +43,7 @@ export const SettingsPage: FC = () => {
             `http://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`,
             {
               headers: {
-                'User-Agent': 'ClaudineApp/1.0'
+                'User-Agent': 'PepperApp/1.0'
               }
             }
           );
@@ -242,18 +225,13 @@ export const SettingsPage: FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-main">
+    <div className="content-body p-6">
       {/* Header */}
-      <Header
-        title="Settings"
-        showBackButton={true}
-        openTasksCount={openTasksCount}
-        notesCount={notesCount}
-      />
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-light text-navy">Instellingen</h1>
+      </div>
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto p-6">
-
+      <div className="max-w-4xl">
         {/* Calendar Section */}
         <div className="bg-gradient-card rounded-card shadow-card p-6 mb-6">
         <h2 className="text-xl font-light text-navy mb-4 tracking-wide">
@@ -434,7 +412,7 @@ export const SettingsPage: FC = () => {
         {/* Copyright Section */}
         <div className="mt-8 text-center">
           <p className="text-sm text-text-muted font-light tracking-wide">
-            Claudine © is bedacht, gemaakt en wordt onderhouden door GS.ai BV.
+            Pepper © is bedacht, gemaakt en wordt onderhouden door <a href="https://www.franklab.nl" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-dark">Franklab</a>.
           </p>
         </div>
       </div>

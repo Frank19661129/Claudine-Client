@@ -1,6 +1,6 @@
 {
-  "name": "Claudine - AI Assistant",
-  "short_name": "Claudine",
+  "name": "Pepper - AI Assistant",
+  "short_name": "Pepper",
   "description": "Personal AI assistant with calendar, notes, and document scanning",
   "start_url": "/",
   "display": "standalone",

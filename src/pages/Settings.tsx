@@ -60,7 +60,7 @@ export const Settings: FC = () => {
             `http://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`,
             {
               headers: {
-                'User-Agent': 'ClaudineApp/1.0'
+                'User-Agent': 'PepperApp/1.0'
               }
             }
           );
@@ -180,7 +180,7 @@ export const Settings: FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-main">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <Header
         title="Settings"
@@ -340,7 +340,7 @@ export const Settings: FC = () => {
         {/* Copyright Section */}
         <div className="mt-8 text-center">
           <p className="text-sm text-text-muted font-light tracking-wide">
-            Claudine © is bedacht, gemaakt en wordt onderhouden door GS.ai BV.
+            Pepper © is bedacht, gemaakt en wordt onderhouden door <a href="https://www.franklab.nl" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-dark">Franklab</a>.
           </p>
         </div>
       </div>

@@ -1,8 +1,10 @@
-# Claudine Web Client - Architecture Document
+# PAI (Pepper) Web Client - Architecture Document
 
-**Version:** 2.0
-**Date:** 2024-12-08
-**Platform:** Web (React + TypeScript + Vite)
+**Version:** 3.0
+**Date:** 2024-12-25
+**Platform:** Web (React 19 + TypeScript + Vite)
+**External Name:** Pepper
+**Internal Name:** PAI (Personal AI)
 
 ---
 
@@ -10,8 +12,9 @@
 
 1. [Architecture Principles](#architecture-principles)
 2. [System Overview](#system-overview)
-3. [API Communication Layer](#api-communication-layer)
-4. [Testing & Development Guidelines](#testing--development-guidelines)
+3. [Layout System](#layout-system)
+4. [API Communication Layer](#api-communication-layer)
+5. [Testing & Development Guidelines](#testing--development-guidelines)
 
 ---
 
@@ -39,7 +42,7 @@ The application follows a strict layered architecture:
                 │ calls
 ┌───────────────▼────────────────────────┐
 │         BACKEND API LAYER              │
-│  • FastAPI server                      │
+│  • FastAPI server (pai-server)         │
 │  • Business logic                      │
 │  • MCP service orchestration           │
 └───────────────┬────────────────────────┘
@@ -56,35 +59,12 @@ The application follows a strict layered architecture:
 
 **RULE:** The web client MUST NEVER make direct calls to external services or MCP servers.
 
-**✅ Correct:**
-```typescript
-// Client → API layer → MCP service
-async startMicrosoftOAuth() {
-  const { data } = await this.client.post('/calendar/oauth/microsoft/start');
-  return data;
-}
-```
-
-**❌ Incorrect:**
-```typescript
-// Client → Direct MCP service call
-const response = await fetch('http://100.99.206.31:9001/auth/start', {
-  method: 'POST',
-});
-```
-
 **Why:**
 1. **Security:** API layer handles authentication, rate limiting, and input validation
 2. **Maintainability:** Service endpoints can change without updating client code
 3. **Testability:** Can mock API layer for testing
 4. **Consistency:** All requests go through same authentication/error handling
 5. **CORS:** Avoids mixed content and CORS issues
-
-**Exception for Testing:**
-During **development/testing**, direct calls MAY be temporarily used, but MUST:
-- Be clearly marked with comments: `// TEMPORARY: Direct MCP call for testing`
-- Have a corresponding GitHub issue to implement proper API endpoint
-- Be replaced with API layer call before merging to main
 
 ---
 
@@ -94,40 +74,147 @@ During **development/testing**, direct calls MAY be temporarily used, but MUST:
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
-| **UI Framework** | React 18 | Component-based UI |
+| **UI Framework** | React 19 | Component-based UI |
 | **Language** | TypeScript 5.x | Type safety |
 | **Build Tool** | Vite 7.x | Fast development & bundling |
 | **State Management** | Zustand | Lightweight state |
 | **HTTP Client** | Axios | API communication |
-| **Router** | React Router 6.x | Client-side routing |
-| **Styling** | Tailwind CSS | Utility-first CSS |
+| **Router** | React Router 7.x | Client-side routing |
+| **Styling** | Tailwind CSS 3.x | Utility-first CSS |
+| **Mobile** | Capacitor | Native mobile builds |
 
 ### 2.2 Project Structure
 
 ```
-claudine-client/
+pai-client/
 ├── src/
 │   ├── components/           # Reusable UI components
+│   │   ├── v2/               # V2 layout components
+│   │   │   ├── TopBar.tsx    # Navy blue top bar with Pepper logo
+│   │   │   └── Sidebar.tsx   # Left sidebar with navigation icons
+│   │   ├── Header.tsx        # Legacy header (v1 only)
+│   │   └── Logo.tsx          # Pepper logo with avatar
+│   ├── layouts/
+│   │   └── MainLayout.tsx    # Main app layout (TopBar + Sidebar + Content)
 │   ├── pages/                # Page components
-│   │   ├── v1/               # Version 1 pages
-│   │   └── v2/               # Version 2 pages (current)
+│   │   ├── Login.tsx         # Login page (standalone, no layout)
+│   │   ├── Register.tsx      # Registration page (standalone)
+│   │   └── v2/               # Version 2 pages (current/default)
+│   │       ├── ChatPage.tsx
+│   │       ├── TasksPage.tsx
+│   │       ├── NotesPage.tsx
+│   │       ├── InboxPage.tsx
+│   │       ├── MonitorPage.tsx
+│   │       └── SettingsPage.tsx
 │   ├── services/
 │   │   ├── api/
 │   │   │   └── client.ts     # API client (SINGLE SOURCE OF TRUTH)
 │   │   └── sse/              # Server-Sent Events
 │   ├── stores/               # Zustand state stores
+│   ├── styles/
+│   │   └── pepper-theme.css  # Pepper theme (Tailwind + custom)
 │   ├── types/                # TypeScript types
 │   └── main.tsx              # Application entry
+├── public/
+│   ├── favicon.jpg           # Pepper favicon
+│   ├── pepper-avatar.jpg     # Pepper avatar image
+│   └── manifest.json         # PWA manifest
 ├── .env                      # Environment variables
 ├── vite.config.ts            # Vite configuration
+├── capacitor.config.ts       # Capacitor mobile config
 └── ARCHITECTURE.md           # This document
 ```
 
 ---
 
-## 3. API Communication Layer
+## 3. Layout System
 
-### 3.1 API Client (`src/services/api/client.ts`)
+### 3.1 MainLayout (Paperless-ngx inspired)
+
+The application uses a **MainLayout** component that wraps all authenticated pages. This layout is inspired by Paperless-ngx design principles.
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                      TopBar                               │
+│  [Pepper Logo + Avatar]              [User Avatar ▾]     │
+├────────┬─────────────────────────────────────────────────┤
+│        │                                                  │
+│  Side  │              Content Area                        │
+│  bar   │                                                  │
+│        │         (Page content renders here)              │
+│  📥    │                                                  │
+│  💬    │                                                  │
+│  📋    │                                                  │
+│  📝    │                                                  │
+│  📊    │                                                  │
+│  ⚙️    │                                                  │
+│        │                                                  │
+└────────┴─────────────────────────────────────────────────┘
+```
+
+**Components:**
+
+| Component | File | Description |
+|-----------|------|-------------|
+| **MainLayout** | `src/layouts/MainLayout.tsx` | Wrapper with TopBar + Sidebar + Content |
+| **TopBar** | `src/components/v2/TopBar.tsx` | Navy blue header with logo and user menu |
+| **Sidebar** | `src/components/v2/Sidebar.tsx` | Left navigation with icon buttons |
+
+### 3.2 Route Structure
+
+```typescript
+// App.tsx - Route configuration
+<Route path="/chat" element={<MainLayout><ChatPage /></MainLayout>} />
+<Route path="/tasks" element={<MainLayout><TasksPage /></MainLayout>} />
+<Route path="/notes" element={<MainLayout><NotesPage /></MainLayout>} />
+<Route path="/inbox" element={<MainLayout><InboxPage /></MainLayout>} />
+<Route path="/monitor" element={<MainLayout><MonitorPage /></MainLayout>} />
+<Route path="/settings" element={<MainLayout><SettingsPage /></MainLayout>} />
+
+// Standalone pages (no MainLayout)
+<Route path="/login" element={<Login />} />
+<Route path="/register" element={<Register />} />
+```
+
+### 3.3 Page Template
+
+All v2 pages follow this structure:
+
+```tsx
+export const ExamplePage: FC = () => {
+  return (
+    <div className="content-body p-6">
+      {/* Page Header */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-light text-navy">Page Title</h1>
+        <button>Action Button</button>
+      </div>
+
+      {/* Page Content */}
+      <div className="max-w-4xl">
+        {/* Content here */}
+      </div>
+    </div>
+  );
+};
+```
+
+### 3.4 Branding
+
+| Element | Value |
+|---------|-------|
+| **External Name** | Pepper |
+| **Internal Name** | PAI (Personal AI) |
+| **Logo** | Pepper avatar + "Pepper" text |
+| **Favicon** | Pepper character (red hair ponytail) |
+| **Theme Colors** | Navy #002366, Silver #ececec, Lenovo Red #E2231A |
+| **Copyright** | "Pepper © is bedacht, gemaakt en wordt onderhouden door Franklab" |
+
+---
+
+## 4. API Communication Layer
+
+### 4.1 API Client (`src/services/api/client.ts`)
 
 **Purpose:** Single centralized client for ALL backend communication.
 
@@ -138,96 +225,18 @@ claudine-client/
 - Error handling
 - Type safety
 
-**Example Structure:**
-```typescript
-class ApiClient {
-  private client: AxiosInstance;
-
-  constructor() {
-    this.client = axios.create({
-      baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8003/api/v1',
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    // Request interceptor: add auth token
-    this.client.interceptors.request.use((config) => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    });
-
-    // Response interceptor: handle 401
-    this.client.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          localStorage.removeItem('token');
-          window.location.href = '/login';
-        }
-        return Promise.reject(error);
-      }
-    );
-  }
-
-  // Authentication
-  async login(email: string, password: string) {
-    const { data } = await this.client.post('/auth/login', { email, password });
-    return data;
-  }
-
-  // Calendar OAuth
-  async startMicrosoftOAuth() {
-    const { data } = await this.client.post('/calendar/oauth/microsoft/start');
-    return data;
-  }
-
-  async pollMicrosoftOAuth(deviceCode: string) {
-    const { data } = await this.client.post('/calendar/oauth/microsoft/poll', {
-      device_code: deviceCode
-    });
-    return data;
-  }
-
-  async getConnectedCalendars() {
-    const { data } = await this.client.get('/calendar/oauth/connected');
-    return data;
-  }
-
-  async setPrimaryCalendar(provider: string) {
-    const { data } = await this.client.post(`/calendar/oauth/${provider}/primary`);
-    return data;
-  }
-
-  // ... other methods
-}
-
-export const api = new ApiClient();
-```
-
-### 3.2 Environment Configuration
+### 4.2 Environment Configuration
 
 **File:** `.env`
 
 ```bash
-# API Base URL - NO hardcoded IPs in code!
-VITE_API_URL=http://172.31.3.193:8003/api/v1
+# API Base URL
+VITE_API_URL=http://100.99.206.31:8003/api/v1
 ```
 
-**Usage in code:**
-```typescript
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8003/api/v1';
-```
+### 4.3 API Endpoints Reference
 
-**Benefits:**
-- Single place to change backend URL
-- Different URLs for dev/staging/production
-- No IP addresses scattered in codebase
-
-### 3.3 API Endpoints Reference
-
-**Backend API:** `http://172.31.3.193:8003/api/v1`
+**Backend API:** `http://100.99.206.31:8003/api/v1`
 
 #### Authentication
 ```
@@ -244,7 +253,7 @@ POST   /calendar/oauth/microsoft/poll
 POST   /calendar/oauth/google/start
 POST   /calendar/oauth/google/poll
 GET    /calendar/oauth/connected
-POST   /calendar/oauth/{provider}/primary    # TODO: Implement in backend
+POST   /calendar/oauth/{provider}/primary
 DELETE /calendar/oauth/{provider}
 ```
 
@@ -259,57 +268,17 @@ DELETE /conversations/{id}
 
 ---
 
-## 4. Testing & Development Guidelines
+## 5. Testing & Development Guidelines
 
-### 4.1 Development Workflow
+### 5.1 Development Workflow
 
 **When adding new API features:**
 
 1. **Backend First:** Implement endpoint in FastAPI server
-   ```python
-   @router.post("/calendar/oauth/microsoft/start")
-   async def start_microsoft_oauth(user_id: str = Depends(get_current_user)):
-       # Call MCP service
-       result = await mcp_microsoft_client.start_oauth()
-       return result
-   ```
-
 2. **API Client:** Add method to `src/services/api/client.ts`
-   ```typescript
-   async startMicrosoftOAuth() {
-     const { data } = await this.client.post('/calendar/oauth/microsoft/start');
-     return data;
-   }
-   ```
-
 3. **UI Integration:** Use API client in pages/components
-   ```typescript
-   import { api } from '../../services/api/client';
 
-   const handleOAuth = async () => {
-     const response = await api.startMicrosoftOAuth();
-     // Handle response
-   };
-   ```
-
-### 4.2 Temporary Testing Exceptions
-
-**Allowed during development:**
-```typescript
-// TEMPORARY: Direct MCP call for testing
-// TODO: Issue #123 - Implement /calendar/oauth/microsoft/start endpoint
-const response = await fetch('http://172.31.3.193:9001/auth/start', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-});
-```
-
-**Requirements:**
-- Must have `TEMPORARY` comment
-- Must reference GitHub issue
-- Must be replaced before PR merge
-
-### 4.3 Code Review Checklist
+### 5.2 Code Review Checklist
 
 Before merging any PR, verify:
 
@@ -318,74 +287,8 @@ Before merging any PR, verify:
 - [ ] No direct `fetch()` calls to MCP services
 - [ ] All API methods have proper TypeScript typing
 - [ ] Error handling implemented
-- [ ] No `TEMPORARY` comments in code
-
-### 4.4 Testing API Layer
-
-**Unit Test Example:**
-```typescript
-import { api } from './client';
-import axios from 'axios';
-
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
-
-describe('API Client', () => {
-  it('should call correct endpoint for Microsoft OAuth', async () => {
-    mockedAxios.post.mockResolvedValue({
-      data: { user_code: 'ABC123', verification_uri: 'https://microsoft.com/device' }
-    });
-
-    const result = await api.startMicrosoftOAuth();
-
-    expect(mockedAxios.post).toHaveBeenCalledWith('/calendar/oauth/microsoft/start');
-    expect(result.user_code).toBe('ABC123');
-  });
-});
-```
-
----
-
-## 5. Networking & Browser Compatibility
-
-### 5.1 Mixed Content Policy
-
-**Issue:** Browsers block HTTP requests from HTTPS pages (mixed content).
-
-**Solution:** Ensure consistent protocol:
-- Development: All HTTP (`http://localhost:5174` → `http://172.31.3.193:8003`)
-- Production: All HTTPS (`https://app.claudine.com` → `https://api.claudine.com`)
-
-### 5.2 CORS Configuration
-
-**Backend responsibility:** API server must send proper CORS headers:
-```python
-# FastAPI backend
-from fastapi.middleware.cors import CORSMiddleware
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5174", "https://app.claudine.com"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
-
-**Client:** No CORS configuration needed - axios automatically handles credentials.
-
-### 5.3 Chrome Private Network Access
-
-**Issue:** Chrome blocks requests to private IPs (192.168.x.x, 100.x.x.x) from browsers.
-
-**Solutions:**
-1. Use Windows Tailscale IP instead of WSL IP (remote IPs allowed)
-2. Setup port forwarding: Windows → WSL
-3. Use localhost with port forwarding on same machine
-
-**Current setup:**
-- Vite dev server: `http://100.104.213.54:5174` (Windows Tailscale IP)
-- API server: `http://172.31.3.193:8003` (WSL bridge IP - accessible from Windows)
+- [ ] Pages use MainLayout wrapper (except login/register)
+- [ ] Consistent styling with pepper-theme.css
 
 ---
 
@@ -395,8 +298,9 @@ app.add_middleware(
 |---------|------|---------|
 | 1.0 | 2024-12-01 | Initial document |
 | 2.0 | 2024-12-08 | Added API layer principles, no direct MCP calls policy |
+| 3.0 | 2024-12-25 | Renamed to PAI/Pepper, added MainLayout documentation, updated tech stack |
 
 ---
 
-**Last Updated:** 2024-12-08
-**Next Review:** 2024-12-22
+**Last Updated:** 2024-12-25
+**Maintainer:** Franklab (https://www.franklab.nl)

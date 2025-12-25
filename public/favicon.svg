@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Liggende rode chili peper -->
+  <defs>
+    <linearGradient id="pepperGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff4444"/>
+      <stop offset="40%" style="stop-color:#cc0000"/>
+      <stop offset="100%" style="stop-color:#8b0000"/>
+    </linearGradient>
+    <linearGradient id="stemGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#228b22"/>
+      <stop offset="100%" style="stop-color:#006400"/>
+    </linearGradient>
+  </defs>
+  <!-- Groene steel -->
+  <path d="M4 28 Q8 24 14 26 L16 30 Q10 32 6 30 Z" fill="url(#stemGrad)"/>
+  <!-- Peper body - lang en gebogen -->
+  <path d="M14 26 Q20 20 32 22 Q48 24 56 30 Q62 34 60 38 Q58 44 52 46 Q44 48 32 44 Q20 40 14 34 Q10 30 14 26 Z" fill="url(#pepperGrad)"/>
+  <!-- Highlight glans -->
+  <ellipse cx="30" cy="28" rx="12" ry="3" fill="rgba(255,255,255,0.25)" transform="rotate(-8 30 28)"/>
+  <!-- Punt van de peper -->
+  <path d="M56 30 Q62 34 60 38 Q64 36 62 32 Q60 28 56 30 Z" fill="#8b0000"/>
+</svg>

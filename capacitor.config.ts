@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.claudine.app',
-  appName: 'Claudine',
+  appId: 'com.pepper.app',
+  appName: 'Pepper',
   webDir: 'dist',
   server: {
     // Allow localhost for development

@@ -45,7 +45,7 @@ export const Register: FC = () => {
         {/* Logo/Title */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-light text-navy tracking-wide mb-2">
-            CLAUDINE
+            PEPPER
           </h1>
           <p className="text-sm text-text-secondary tracking-widest uppercase">
             AI Assistant

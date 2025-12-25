@@ -99,7 +99,7 @@ export const Monitor: FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-main">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <Header
         title="Monitor"

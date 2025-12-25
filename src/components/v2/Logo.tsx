@@ -13,7 +13,7 @@ export const Logo: FC<LogoProps> = ({ size = 'md' }) => {
 
   return (
     <div className={`font-semibold tracking-tight ${sizeClasses[size]} text-white flex items-baseline`}>
-      <span>Claudine</span>
+      <span>Pepper</span>
       <span className="text-accent">.</span>
       <span className="text-sm font-light opacity-90">Assistent</span>
     </div>

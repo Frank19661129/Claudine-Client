@@ -1,0 +1,13 @@
+services:
+  pai-client:
+    build: .
+    container_name: pai-client
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://100.99.206.31:8003
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./index.html:/app/index.html
+    restart: unless-stopped

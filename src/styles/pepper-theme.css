@@ -1,5 +1,5 @@
 /*
- * Claudine Theme - Silver Cloud met Lenovo Rood
+ * Pepper Theme - Silver Cloud met Lenovo Rood
  * Gebaseerd op Paperless-NGX design principes
  * Colors: Navy #002366 + Silver #ececec + Lenovo Red #E2231A
  */
@@ -311,20 +311,6 @@
 
   .empty-state-text {
     @apply text-base mb-4;
-  }
-
-  /* Logo Component - GS.ai with Red Dot */
-  .logo-gs {
-    @apply text-navy font-bold;
-  }
-
-  .logo-ai {
-    @apply text-navy font-light;
-  }
-
-  .logo-ai::before {
-    content: '.';
-    @apply text-accent;
   }
 
   /* Notification Badge */

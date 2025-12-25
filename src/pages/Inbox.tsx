@@ -241,7 +241,7 @@ export const Inbox: FC = () => {
   };
 
   return (
-    <div className="h-screen bg-gradient-main flex flex-col">
+    <div className="h-screen bg-white flex flex-col">
       <Header title="Inbox" />
 
       <div className="flex-1 overflow-auto p-8">
